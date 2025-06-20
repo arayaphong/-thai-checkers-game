@@ -1,0 +1,23 @@
+# Ignore build artifacts
+/build/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+Makefile
+build.ninja
+*.ninja
+
+# Ignore libraries and binaries
+lib/
+bin/
+*.a
+*.o
+ThaiCheckers
+
+# Testing artifacts
+Testing/
+tests/*/CMakeFiles/
+
+# IDE files
+.vscode/
