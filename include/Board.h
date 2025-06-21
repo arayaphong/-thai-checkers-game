@@ -17,7 +17,7 @@ public:
     bool movePiece(int startX, int startY, int endX, int endY);
     std::vector<std::vector<Position>> getPossibleMoves(const Piece& piece) const;
     bool isValidMove(int startX, int startY, int endX, int endY) const;
-    std::vector<Position> getPiecesCanMove(const std::string& playerName) const;
+    std::vector<Piece> getPiecesCanMove(const std::string& playerName) const;
     Piece* getPieceAt(const Position& pos) const;
     std::string getCurrentPlayer() const;
 

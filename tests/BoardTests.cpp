@@ -49,26 +49,28 @@ TEST_F(BoardTests, DisplayBoard) {
 
 TEST_F(BoardTests, GetPiecesCanMove) {
     // Test getting pieces that can move for Player1
-    std::vector<Position> player1Pieces = board.getPiecesCanMove("Player1");
+    const std::vector<Piece> player1Pieces = board.getPiecesCanMove("Player1");
     EXPECT_FALSE(player1Pieces.empty());
 
     // Assuming Player1 pieces are on rows 0 and 1, only pieces on row 1 can move initially.
-    for (const Position& pos : player1Pieces) {
+    for (const Piece& piece : player1Pieces) {
+        Position pos = piece.getPosition();
         EXPECT_EQ(pos.x, 1);
     }
 
     // Test getting pieces that can move for Player2
-    std::vector<Position> player2Pieces = board.getPiecesCanMove("Player2");
+    std::vector<Piece> player2Pieces = board.getPiecesCanMove("Player2");
     EXPECT_FALSE(player2Pieces.empty());
 
     // Assuming Player2 pieces are on rows 6 and 7, only pieces on row 6 can move initially.
-    for (const Position& pos : player2Pieces) {
+    for (const Piece& piece : player2Pieces) {
+        Position pos = piece.getPosition();
         EXPECT_EQ(pos.x, 6);
     }
 }
 
 TEST_F(BoardTests, GetPiecesCanMoveAfterMove) {
-    std::vector<Position> player1InitialPieces = board.getPiecesCanMove("Player1");
+    std::vector<Piece> player1InitialPieces = board.getPiecesCanMove("Player1");
     size_t initialCount = player1InitialPieces.size();
     
     // Make a move
@@ -76,7 +78,7 @@ TEST_F(BoardTests, GetPiecesCanMoveAfterMove) {
     
     // After P1 moves, let's assume getPiecesCanMove is for a given player regardless of turn.
     // The piece at (0,0) and (0,2) might now be able to move.
-    std::vector<Position> player1AfterMove = board.getPiecesCanMove("Player1");
+    std::vector<Piece> player1AfterMove = board.getPiecesCanMove("Player1");
     size_t afterMoveCount = player1AfterMove.size();
     
     // The number of pieces that can move should have changed.
@@ -93,9 +95,10 @@ TEST_F(BoardTests, GetPiecesCanMoveCaptureScenario) {
     // Now, Player1 should have a capture opportunity.
     // The piece at (3,3) can capture the piece at (4,2).
     // We can check if (3,3) is in the list of pieces that can move.
-    std::vector<Position> player1Pieces = board.getPiecesCanMove("Player1");
+    std::vector<Piece> player1Pieces = board.getPiecesCanMove("Player1");
     bool found_capture_piece = false;
-    for (const auto& pos : player1Pieces) {
+    for (const auto& piece : player1Pieces) {
+        Position pos = piece.getPosition();
         if (pos.x == 3 && pos.y == 3) {
             found_capture_piece = true;
             break;

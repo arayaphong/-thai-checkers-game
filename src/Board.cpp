@@ -228,8 +228,8 @@ std::vector<std::vector<Position>> Board::getPossibleMoves(const Piece& piece) c
 }
 
 // Get all pieces that can move for a specific player
-std::vector<Position> Board::getPiecesCanMove(const std::string& playerName) const {
-    std::vector<Position> movablePieces;
+std::vector<Piece> Board::getPiecesCanMove(const std::string& playerName) const {
+    std::vector<Piece> movablePieces;
     
     // Iterate through all positions on the board
     for (int x = 0; x < 8; ++x) {
@@ -240,7 +240,7 @@ std::vector<Position> Board::getPiecesCanMove(const std::string& playerName) con
             if (piece && piece->getColor() == playerName) {
                 // Check if this piece has any possible moves
                 if (!getPossibleMoves(*piece).empty()) {
-                    movablePieces.push_back({x, y});
+                    movablePieces.push_back(*piece);
                 }
             }
         }
