@@ -12,7 +12,9 @@ class Piece {
 public:
     enum class Type { Regular, King };    // added type enum
     Piece();
-    Piece(const std::string& color, Position position);
+    Piece(const Piece& piece) = default;  // copy constructor
+    Piece(const std::string& color, Position position)
+        : color(color), position(position) {}
     const std::string& getColor() const;
     Position getPosition() const;
     void setPosition(Position newPosition);

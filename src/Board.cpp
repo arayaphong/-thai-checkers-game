@@ -20,6 +20,7 @@ void Board::initialize(const std::string& p1, const std::string& p2) {
     // Store player names
     player1Name = p1;
     player2Name = p2;
+    currentPlayer = player1Name;
     // Clear board
     for (auto& row : grid) {
         for (auto& piece : row) {
@@ -61,35 +62,96 @@ void Board::display() const {
 }
 
 bool Board::isValidMove(int startX, int startY, int endX, int endY) const {
-    return (startX >= 0 && startX < 8 && startY >= 0 && startY < 8 &&
-            endX >= 0 && endX < 8 && endY >= 0 && endY < 8 &&
-            grid[startX][startY] != nullptr);
+    if (startX < 0 || startX >= 8 || startY < 0 || startY >= 8 ||
+        endX < 0 || endX >= 8 || endY < 0 || endY >= 8) {
+        return false;
+    }
+
+    Piece* piece = grid[startX][startY];
+    if (!piece || piece->getColor() != currentPlayer) {
+        return false;
+    }
+
+    if (grid[endX][endY] != nullptr) {
+        return false; // Destination must be empty
+    }
+
+    int dx = endX - startX;
+    int dy = endY - startY;
+
+    if (piece->getType() == Piece::Type::Regular) {
+        int forward_dir = (piece->getColor() == player1Name) ? 1 : -1;
+        if (abs(dx) == 1 && dx == forward_dir && abs(dy) == 1) {
+            return true; // Regular move
+        }
+        if (abs(dx) == 2 && dx == 2 * forward_dir && abs(dy) == 2) {
+            Piece* captured = grid[startX + dx / 2][startY + dy / 2];
+            if (captured && captured->getColor() != piece->getColor()) {
+                return true; // Capture
+            }
+        }
+    } else { // King
+        if (abs(dx) == abs(dy)) {
+            // Check for blocking pieces along the path for non-capture moves
+            if (abs(dx) == 1) return true;
+
+            // Check for captures
+            int stepX = dx / abs(dx);
+            int stepY = dy / abs(dy);
+            int steps = abs(dx);
+            int piecesToJump = 0;
+            Piece* captured = nullptr;
+            for (int i = 1; i < steps; ++i) {
+                Piece* p = grid[startX + i * stepX][startY + i * stepY];
+                if (p) {
+                    piecesToJump++;
+                    captured = p;
+                }
+            }
+            if (piecesToJump == 1 && captured && captured->getColor() != piece->getColor()) {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 bool Board::movePiece(int startX, int startY, int endX, int endY) {
     if (isValidMove(startX, startY, endX, endY)) {
-        delete grid[endX][endY];
+        int dx = endX - startX;
+        // If it's a capture move, remove the captured piece
+        if (abs(dx) == 2) {
+            int capturedX = startX + dx / 2;
+            int capturedY = startY + (endY - startY) / 2;
+            delete grid[capturedX][capturedY];
+            grid[capturedX][capturedY] = nullptr;
+        }
+
         grid[endX][endY] = grid[startX][startY];
         grid[startX][startY] = nullptr;
+        grid[endX][endY]->setPosition({endX, endY});
 
         // Check for promotion to King
         Piece* moved = grid[endX][endY];
         if (moved->getType() == Piece::Type::Regular) {
             const std::string& color = moved->getColor();
-            // First player promotes at row 7, second at row 0
             if ((color == player1Name && endX == 7) || (color == player2Name && endX == 0)) {
                 delete moved;
                 grid[endX][endY] = new KingPiece(color, {endX, endY});
             }
         }
+        
+        // Switch turns
+        currentPlayer = (currentPlayer == player1Name) ? player2Name : player1Name;
 
         return true;
     }
     return false;
 }
 
-// Get possible move sequences (normal and capture chains) for a piece at the given position
-std::vector<std::vector<Position>> Board::getPossibleMoves(Position pos) const {
+std::vector<std::vector<Position>> Board::getPossibleMoves(const Piece& piece) const {
+    Position pos = piece.getPosition();
     std::vector<std::vector<Position>> allMoves;
     int x = pos.x;
     int y = pos.y;
@@ -177,10 +239,7 @@ std::vector<Position> Board::getPiecesCanMove(const std::string& playerName) con
             // Check if there's a piece at this position and it belongs to the specified player
             if (piece && piece->getColor() == playerName) {
                 // Check if this piece has any possible moves
-                std::vector<std::vector<Position>> possibleMoves = getPossibleMoves({x, y});
-                
-                // If the piece has at least one possible move, add its position to the result
-                if (!possibleMoves.empty()) {
+                if (!getPossibleMoves(*piece).empty()) {
                     movablePieces.push_back({x, y});
                 }
             }
@@ -188,4 +247,16 @@ std::vector<Position> Board::getPiecesCanMove(const std::string& playerName) con
     }
     
     return movablePieces;
+}
+
+// Get piece at specific position
+Piece* Board::getPieceAt(const Position& pos) const {
+    if (pos.x >= 0 && pos.x < 8 && pos.y >= 0 && pos.y < 8) {
+        return grid[pos.x][pos.y];
+    }
+    return nullptr;
+}
+
+std::string Board::getCurrentPlayer() const {
+    return currentPlayer;
 }

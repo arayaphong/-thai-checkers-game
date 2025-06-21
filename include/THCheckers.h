@@ -13,7 +13,8 @@ public:
     THCheckers(const std::string& p1, const std::string& p2);
     void startGame();
     void displayBoard() const;
-    // Get all possible move destinations for a piece at the given position
+    std::vector<Position> getPiecesCanMove() const;
+    std::vector<std::vector<Position>> getPossibleMoves(const Piece& piece) const;
     std::vector<std::vector<Position>> getPossibleMoves(const Position& pos) const;
     void makeMove();
     bool checkWinCondition() const;

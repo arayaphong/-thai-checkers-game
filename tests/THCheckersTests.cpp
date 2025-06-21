@@ -35,9 +35,8 @@ TEST_F(THCheckersTests, TestMakeMove) {
 }
 
 TEST_F(THCheckersTests, TestGetPossibleMovesInitialPosition) {
-    // For initial board, Player1 piece at (1,1) should have moves to (2,2) and (2,0)
-    Position pos{1, 1};
-    auto moves = game.getPossibleMoves(pos);
+    auto pieces = game.getPiecesCanMove();
+    auto moves = game.getPossibleMoves(pieces[0]);
     ASSERT_EQ(moves.size(), 2);
     // Each move sequence contains a single step for initial moves
     EXPECT_EQ(moves[0].size(), 1);
