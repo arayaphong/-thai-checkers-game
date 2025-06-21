@@ -39,8 +39,11 @@ TEST_F(THCheckersTests, TestGetPossibleMovesInitialPosition) {
     Position pos{1, 1};
     auto moves = game.getPossibleMoves(pos);
     ASSERT_EQ(moves.size(), 2);
-    EXPECT_EQ(moves[0].x, 2);
-    EXPECT_EQ(moves[0].y, 2);
-    EXPECT_EQ(moves[1].x, 2);
-    EXPECT_EQ(moves[1].y, 0);
+    // Each move sequence contains a single step for initial moves
+    EXPECT_EQ(moves[0].size(), 1);
+    EXPECT_EQ(moves[0][0].x, 2);
+    EXPECT_EQ(moves[0][0].y, 2);
+    EXPECT_EQ(moves[1].size(), 1);
+    EXPECT_EQ(moves[1][0].x, 2);
+    EXPECT_EQ(moves[1][0].y, 0);
 }

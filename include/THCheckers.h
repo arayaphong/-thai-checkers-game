@@ -14,7 +14,7 @@ public:
     void startGame();
     void displayBoard() const;
     // Get all possible move destinations for a piece at the given position
-    std::vector<Position> getPossibleMoves(const Position& pos) const;
+    std::vector<std::vector<Position>> getPossibleMoves(const Position& pos) const;
     void makeMove();
     bool checkWinCondition() const;
 

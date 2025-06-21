@@ -15,9 +15,11 @@ public:
     void initialize(const std::string& player1Name, const std::string& player2Name);
     void display() const;
     bool movePiece(int startX, int startY, int endX, int endY);
-    // Get possible moves (normal and capture) for a piece at the given position
-    std::vector<Position> getPossibleMoves(Position pos) const;
+    // Get possible move sequences (normal and capture chains) for a piece at the given position
+    std::vector<std::vector<Position>> getPossibleMoves(Position pos) const;
     bool isValidMove(int startX, int startY, int endX, int endY) const;
+    // Get all pieces that can move for a specific player
+    std::vector<Position> getPiecesCanMove(const std::string& playerName) const;
 
 private:
     std::vector<std::vector<Piece*>> grid;

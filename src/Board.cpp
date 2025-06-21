@@ -2,6 +2,7 @@
 #include "KingPiece.h"
 #include <iostream>
 #include <vector>
+#include <functional>
 
 Board::Board() {
     grid.resize(8, std::vector<Piece*>(8, nullptr));
@@ -87,14 +88,14 @@ bool Board::movePiece(int startX, int startY, int endX, int endY) {
     return false;
 }
 
-// Get possible moves (normal and capture) for a piece at the given position
-std::vector<Position> Board::getPossibleMoves(Position pos) const {
-    std::vector<Position> moves;
+// Get possible move sequences (normal and capture chains) for a piece at the given position
+std::vector<std::vector<Position>> Board::getPossibleMoves(Position pos) const {
+    std::vector<std::vector<Position>> allMoves;
     int x = pos.x;
     int y = pos.y;
-    if (x < 0 || x >= 8 || y < 0 || y >= 8) return moves;
+    if (x < 0 || x >= 8 || y < 0 || y >= 8) return allMoves;
     Piece* p = grid[x][y];
-    if (!p) return moves;
+    if (!p) return allMoves;
 
     // Determine movement directions
     std::vector<std::pair<int,int>> dirs;
@@ -109,22 +110,82 @@ std::vector<Position> Board::getPossibleMoves(Position pos) const {
         dirs = {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
     }
 
+    // Simple moves (single-step)
     for (auto [dx, dy] : dirs) {
         int nx = x + dx;
         int ny = y + dy;
-        // Simple move
-        if (nx >= 0 && nx < 8 && ny >= 0 && ny < 8) {
-            if (!grid[nx][ny]) {
-                moves.push_back({nx, ny});
-            } else if (grid[nx][ny]->getColor() != p->getColor()) {
-                // Capture move
-                int jx = x + 2*dx;
-                int jy = y + 2*dy;
-                if (jx >= 0 && jx < 8 && jy >= 0 && jy < 8 && !grid[jx][jy]) {
-                    moves.push_back({jx, jy});
+        if (nx >= 0 && nx < 8 && ny >= 0 && ny < 8 && !grid[nx][ny]) {
+            allMoves.push_back({{nx, ny}});
+        }
+    }
+
+    // Capture moves (including chains)
+    std::vector<Position> path;
+    std::vector<std::vector<Position>> capturePaths;
+    auto gridCopy = grid; // copy board state for simulation
+    std::function<void(int,int)> dfs = [&](int cx, int cy) {
+        bool foundCapture = false;
+        for (auto [dx, dy] : dirs) {
+            int mx = cx + dx;
+            int my = cy + dy;
+            int lx = cx + 2*dx;
+            int ly = cy + 2*dy;
+            if (mx >= 0 && mx < 8 && my >= 0 && my < 8 &&
+                lx >= 0 && lx < 8 && ly >= 0 && ly < 8 &&
+                gridCopy[mx][my] && gridCopy[mx][my]->getColor() != p->getColor() &&
+                !gridCopy[lx][ly]) {
+
+                foundCapture = true;
+                // simulate capture
+                Piece* captured = gridCopy[mx][my];
+                gridCopy[cx][cy] = nullptr;
+                gridCopy[mx][my] = nullptr;
+                gridCopy[lx][ly] = p;
+                path.push_back({lx, ly});
+
+                dfs(lx, ly);
+
+                // restore state
+                path.pop_back();
+                gridCopy[cx][cy] = p;
+                gridCopy[mx][my] = captured;
+                gridCopy[lx][ly] = nullptr;
+            }
+        }
+        if (!foundCapture && !path.empty()) {
+            capturePaths.push_back(path);
+        }
+    };
+    dfs(x, y);
+
+    // Add capture paths after simple moves
+    for (auto& seq : capturePaths) {
+        allMoves.push_back(seq);
+    }
+    return allMoves;
+}
+
+// Get all pieces that can move for a specific player
+std::vector<Position> Board::getPiecesCanMove(const std::string& playerName) const {
+    std::vector<Position> movablePieces;
+    
+    // Iterate through all positions on the board
+    for (int x = 0; x < 8; ++x) {
+        for (int y = 0; y < 8; ++y) {
+            Piece* piece = grid[x][y];
+            
+            // Check if there's a piece at this position and it belongs to the specified player
+            if (piece && piece->getColor() == playerName) {
+                // Check if this piece has any possible moves
+                std::vector<std::vector<Position>> possibleMoves = getPossibleMoves({x, y});
+                
+                // If the piece has at least one possible move, add its position to the result
+                if (!possibleMoves.empty()) {
+                    movablePieces.push_back({x, y});
                 }
             }
         }
     }
-    return moves;
+    
+    return movablePieces;
 }
