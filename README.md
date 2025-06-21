@@ -71,6 +71,14 @@ thai-checkers
       std::cout << "(" << m.x << "," << m.y << ") ";
   }
   ```
+- **NEW:** Retrieve all pieces that can move for a specific player using `getPiecesCanMove`:
+  ```cpp
+  // Get all Player1 pieces that have at least one valid move
+  std::vector<Position> movable = board.getPiecesCanMove("Player1");
+  for (const Position& pos : movable) {
+      std::cout << "Player1 can move piece at (" << pos.x << ", " << pos.y << ")\n";
+  }
+  ```
 
 ## Game Rules
 - Each player starts with a set of pieces placed on their side of the board.
@@ -79,7 +87,19 @@ thai-checkers
 
 ## Testing
 - Unit tests are provided for each class to ensure the functionality of the game logic.
-- To run the tests, navigate to the `tests` directory and follow the build instructions similar to the main project.
+- The test suite now includes comprehensive scenarios for the `getPiecesCanMove` method, covering:
+  - Initial board state
+  - After moves
+  - Capture opportunities
+  - Edge and corner cases
+  - Empty and custom boards
+  - Consistency and correctness
+- To run the tests, build the project and run:
+  ```bash
+  cd build
+  ctest --verbose
+  ```
+- All tests should pass, confirming the correctness of the game logic and move generation.
 
 ## Contributions
 Contributions to improve the game or add new features are welcome. Please submit a pull request with your changes.
