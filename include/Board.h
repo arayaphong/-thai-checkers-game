@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <memory>
 #include "Piece.h"
 
 class States;  // forward
@@ -14,10 +15,10 @@ public:
     void initialize(const std::vector<std::vector<Piece*>>& grid);
     void initialize(const std::string &player1Name, const std::string &player2Name);
     void display() const;
-    std::vector<std::vector<Position>> getChoices(const Piece& piece) const;
-    // Gather all possible move paths (simple + capture) for a piece
-    States getStates(const Piece& piece);
-    std::vector<Piece> getMoveablePieces(const std::string& playerName) const;
+    void setTurn(const std::string& color);
+    void movePiece(const std::vector<Position>& path);
+    States getStates(const Piece& piece) const;
+    std::vector<std::unique_ptr<Piece>> getMoveablePieces() const;
     std::string getCurrentPlayer() const;
 
 private:
@@ -34,10 +35,9 @@ private:
 // State container for move paths and board updates
 class States {
 public:
-    // Return raw choice paths
-    const std::vector<std::vector<Position>>& getChoices() const { return choices; }
     // Apply chosen path back to the board
     void selectMove(const std::vector<Position>& path);
+    const std::vector<std::vector<Position>>& getChoices() const { return choices; }
 
 private:
     friend class Board;

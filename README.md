@@ -13,18 +13,15 @@ thai-checkers
 │   ├── main.cpp            # Entry point of the application
 │   ├── Board.cpp           # Implementation of the Board class
 │   ├── Piece.cpp           # Implementation of the Piece class
-│   ├── KingPiece.cpp       # Implementation of the KingPiece subclass
-│   └── THCheckers.cpp      # Implementation of the THCheckers class
+│   └── KingPiece.cpp       # Implementation of the KingPiece subclass
 ├── include                  # Header files for the game classes
 │   ├── Board.h             # Declaration of the Board class
 │   ├── Piece.h             # Declaration of the Piece class
-│   ├── KingPiece.h         # Declaration of the KingPiece subclass
-│   └── THCheckers.h        # Declaration of the THCheckers class
+│   └── KingPiece.h         # Declaration of the KingPiece subclass
 ├── tests                   # Unit tests for the game
 │   ├── CMakeLists.txt      # Build configuration for the test suite
 │   ├── BoardTests.cpp      # Unit tests for the Board class
-│   ├── PieceTests.cpp      # Unit tests for the Piece class
-│   └── THCheckersTests.cpp  # Unit tests for the THCheckers class
+│   └── PieceTests.cpp      # Unit tests for the Piece class
 └── README.md               # Documentation for the project
 ```
 
@@ -52,25 +49,6 @@ thai-checkers
 - Players take turns to make their moves until one player wins or the game ends in a draw.
   
 ### Game API
-- Initialize and start a game with default player names:
-  ```cpp
-  THCheckers game;
-  game.startGame();
-  game.displayBoard(); // Show initial board
-  ```
-- Use a custom constructor to name players:
-  ```cpp
-  THCheckers customGame("Alice", "Bob");
-  customGame.startGame();
-  ```
-- Retrieve valid moves for any piece using `getTargetPositions`:
-  ```cpp
-  Position pos{1, 1};
-  auto moves = game.getTargetPositions(pos);
-  for (auto m : moves) {
-      std::cout << "(" << m.x << "," << m.y << ") ";
-  }
-  ```
 - **NEW:** Retrieve all pieces that can move for a specific player using `getMoveablePieces`:
   ```cpp
   // Get all Player1 pieces that have at least one valid move
@@ -99,7 +77,3 @@ thai-checkers
   cd build
   ctest --verbose
   ```
-- All tests should pass, confirming the correctness of the game logic and move generation.
-
-## Contributions
-Contributions to improve the game or add new features are welcome. Please submit a pull request with your changes.

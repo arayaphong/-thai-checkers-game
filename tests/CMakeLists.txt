@@ -4,7 +4,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(TEST_SOURCES
     BoardTests.cpp
     PieceTests.cpp
-    THCheckersTests.cpp
     BoardDisplayTests.cpp
     StatesTest.cpp
 )
@@ -24,6 +23,5 @@ enable_testing()
 # Add tests
 add_test(NAME BoardTests COMMAND ThaiCheckersTests)
 add_test(NAME PieceTests COMMAND ThaiCheckersTests)
-add_test(NAME THCheckersTests COMMAND ThaiCheckersTests)
 add_test(NAME BoardDisplayTests COMMAND ThaiCheckersTests)
 add_test(NAME StatesTest COMMAND ThaiCheckersTests)

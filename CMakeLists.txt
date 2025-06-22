@@ -12,7 +12,6 @@ include_directories(include)
 set(LIB_SOURCES
     src/Board.cpp
     src/Piece.cpp
-    src/THCheckers.cpp
     src/KingPiece.cpp
 )
 

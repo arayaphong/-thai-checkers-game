@@ -4,6 +4,7 @@
 #include <vector>
 #include <functional>
 #include <set> // Add include for set to detect player names
+#include <memory>
 
 Board::Board() {
     grid.resize(8, std::vector<Piece*>(8, nullptr));
@@ -36,6 +37,10 @@ void Board::initialize(const std::vector<std::vector<Piece*>>& initialGrid) {
         player2Name = *it;
     }
     currentPlayer = player1Name;
+}
+
+void Board::setTurn(const std::string& color) {
+    currentPlayer = color;
 }
 
 void Board::initialize(const std::string& p1, const std::string& p2) {
@@ -97,16 +102,10 @@ void Board::display() const {
     }
 }
 
-// Wrapper for choice paths, delegates to getStates
-std::vector<std::vector<Position>> Board::getChoices(const Piece& piece) const {
-    States s = const_cast<Board*>(this)->getStates(piece);
-    return s.getChoices();
-}
-
 // Generate all possible move paths wrapped in a States object
-States Board::getStates(const Piece& piece) {
+States Board::getStates(const Piece& piece) const {
     States s;
-    s.board = this;
+    s.board = const_cast<Board*>(this);
     s.piece = &piece;
     // replicate getTargetPositions logic here
     Position pos = piece.getPosition();
@@ -157,6 +156,21 @@ States Board::getStates(const Piece& piece) {
     return s;
 }
 
+std::vector<std::unique_ptr<Piece>> Board::getMoveablePieces() const {
+    std::vector<std::unique_ptr<Piece>> moveablePieces;
+    for (const auto& row : grid) {
+        for (const auto* piece : row) {
+            if (piece && piece->getColor() == currentPlayer) {
+                // A piece is moveable if it has any valid moves.
+                if (!const_cast<Board*>(this)->getStates(*piece).getChoices().empty()) {
+                    moveablePieces.push_back(std::make_unique<Piece>(*piece));
+                }
+            }
+        }
+    }
+    return moveablePieces;
+}
+
 // Apply a selected path back to the board, moving the piece and removing captures
 void States::selectMove(const std::vector<Position>& path) {
     if (!board || !piece || path.empty()) return;
@@ -192,23 +206,6 @@ void States::selectMove(const std::vector<Position>& path) {
     }
 }
 
-// Get all pieces that can move for a specific player
-std::vector<Piece> Board::getMoveablePieces(const std::string& playerName) const {
-    std::vector<Piece> movablePieces;
-    for (int x = 0; x < 8; ++x) {
-        for (int y = 0; y < 8; ++y) {
-            Piece* piece = grid[x][y];
-            if (piece && piece->getColor() == playerName) {
-                if (!getChoices(*piece).empty()) {
-                    movablePieces.push_back(*piece);
-                }
-            }
-        }
-    }
-    return movablePieces;
-}
-
-// Return the current player's name
 std::string Board::getCurrentPlayer() const {
     return currentPlayer;
 }
