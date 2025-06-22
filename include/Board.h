@@ -4,7 +4,6 @@
 #include <vector>
 #include <string>
 #include "Piece.h"
-#include "KingPiece.h"
 
 class States;  // forward
 

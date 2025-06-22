@@ -1,5 +1,5 @@
+#include <gtest/gtest.h>
 #include "THCheckers.h"
-#include "gtest/gtest.h"
 
 class THCheckersTests : public ::testing::Test {
 protected:

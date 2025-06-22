@@ -6,6 +6,7 @@ set(TEST_SOURCES
     PieceTests.cpp
     THCheckersTests.cpp
     BoardDisplayTests.cpp
+    StatesTest.cpp
 )
 
 # Create the test executable
@@ -25,3 +26,4 @@ add_test(NAME BoardTests COMMAND ThaiCheckersTests)
 add_test(NAME PieceTests COMMAND ThaiCheckersTests)
 add_test(NAME THCheckersTests COMMAND ThaiCheckersTests)
 add_test(NAME BoardDisplayTests COMMAND ThaiCheckersTests)
+add_test(NAME StatesTest COMMAND ThaiCheckersTests)

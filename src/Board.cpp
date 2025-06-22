@@ -1,5 +1,4 @@
 #include "Board.h"
-#include "KingPiece.h"
 #include <algorithm>  // for remove_if
 #include <iostream>
 #include <vector>
@@ -115,14 +114,10 @@ States Board::getStates(const Piece& piece) {
     if (x < 0 || x >= 8 || y < 0 || y >= 8) return s;
     Piece* p = grid[x][y];
     if (!p) return s;
-    // movement dirs
+    // movement dirs for regular pieces only
     std::vector<std::pair<int,int>> dirs;
-    if (p->getType() == Piece::Type::Regular) {
-        if (p->getColor() == player1Name) dirs = {{1,1},{1,-1}};
-        else dirs = {{-1,1},{-1,-1}};
-    } else {
-        dirs = {{1,1},{1,-1},{-1,1},{-1,-1}};
-    }
+    if (p->getColor() == player1Name) dirs = {{1,1},{1,-1}};
+    else dirs = {{-1,1},{-1,-1}};
     // simple moves
     std::vector<std::vector<Position>>& allMoves = s.choices;
     for (auto [dx,dy] : dirs) {
