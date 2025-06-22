@@ -26,12 +26,12 @@ bool THCheckers::checkWinCondition() const {
     return true; // Immediately end game
 }
 
-std::vector<Piece> THCheckers::getPiecesCanMove() const {
+std::vector<Piece> THCheckers::getMoveablePieces() const {
     // Get all pieces that can move for the current player
-    return board.getPiecesCanMove(board.getCurrentPlayer());
+    return board.getMoveablePieces(board.getCurrentPlayer());
 }
 
 // Get possible move sequences for piece at given position, delegate to Board
-std::vector<std::vector<Position>> THCheckers::getPossibleMoves(const Piece& piece) const {
-    return board.getPossibleMoves(piece);
+std::vector<std::vector<Position>> THCheckers::getTargetPositions(const Piece& piece) const {
+    return board.getTargetPositions(piece);
 }

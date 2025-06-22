@@ -34,9 +34,9 @@ TEST_F(THCheckersTests, TestMakeMove) {
     EXPECT_NO_THROW(game.makeMove());
 }
 
-TEST_F(THCheckersTests, TestGetPossibleMovesInitialPosition) {
-    auto pieces = game.getPiecesCanMove();
-    auto moves = game.getPossibleMoves(pieces[0]);
+TEST_F(THCheckersTests, TestGetTargetPositionsInitialPosition) {
+    auto pieces = game.getMoveablePieces();
+    auto moves = game.getTargetPositions(pieces[0]);
     ASSERT_EQ(moves.size(), 2);
     // Each move sequence contains a single step for initial moves
     EXPECT_EQ(moves[0].size(), 1);

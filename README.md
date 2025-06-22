@@ -63,18 +63,18 @@ thai-checkers
   THCheckers customGame("Alice", "Bob");
   customGame.startGame();
   ```
-- Retrieve valid moves for any piece using `getPossibleMoves`:
+- Retrieve valid moves for any piece using `getTargetPositions`:
   ```cpp
   Position pos{1, 1};
-  auto moves = game.getPossibleMoves(pos);
+  auto moves = game.getTargetPositions(pos);
   for (auto m : moves) {
       std::cout << "(" << m.x << "," << m.y << ") ";
   }
   ```
-- **NEW:** Retrieve all pieces that can move for a specific player using `getPiecesCanMove`:
+- **NEW:** Retrieve all pieces that can move for a specific player using `getMoveablePieces`:
   ```cpp
   // Get all Player1 pieces that have at least one valid move
-  std::vector<Position> movable = board.getPiecesCanMove("Player1");
+  std::vector<Position> movable = board.getMoveablePieces("Player1");
   for (const Position& pos : movable) {
       std::cout << "Player1 can move piece at (" << pos.x << ", " << pos.y << ")\n";
   }
@@ -87,7 +87,7 @@ thai-checkers
 
 ## Testing
 - Unit tests are provided for each class to ensure the functionality of the game logic.
-- The test suite now includes comprehensive scenarios for the `getPiecesCanMove` method, covering:
+- The test suite now includes comprehensive scenarios for the `getMoveablePieces` method, covering:
   - Initial board state
   - After moves
   - Capture opportunities

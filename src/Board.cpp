@@ -28,22 +28,16 @@ void Board::initialize(const std::string& p1, const std::string& p2) {
             piece = nullptr;
         }
     }
-    // Set up initial pieces
-    for (int i = 0; i < 2; ++i) {
-        for (int j = (i % 2); j < 8; j += 2) {
-            grid[i][j] = new Piece(player1Name, {i, j});
+    // Set up initial pieces with a lambda (no OpenMP)
+    auto place_pieces = [&](int row_start, int row_end, const std::string& player) {
+        for (int i = row_start; i < row_end; ++i) {
+            for (int j = (i % 2); j < 8; j += 2) {
+                grid[i][j] = new Piece(player, {i, j});
+            }
         }
-    }
-    for (int i = 6; i < 8; ++i) {
-        for (int j = (i % 2); j < 8; j += 2) {
-            grid[i][j] = new Piece(player2Name, {i, j});
-        }
-    }
-}
-
-// Overload initialize with default player names
-void Board::initialize() {
-    initialize("Player1", "Player2");
+    };
+    place_pieces(0, 2, player1Name);
+    place_pieces(6, 8, player2Name);
 }
 
 void Board::display() const {
@@ -150,7 +144,7 @@ bool Board::movePiece(int startX, int startY, int endX, int endY) {
     return false;
 }
 
-std::vector<std::vector<Position>> Board::getPossibleMoves(const Piece& piece) const {
+std::vector<std::vector<Position>> Board::getTargetPositions(const Piece& piece) const {
     Position pos = piece.getPosition();
     std::vector<std::vector<Position>> allMoves;
     int x = pos.x;
@@ -228,7 +222,7 @@ std::vector<std::vector<Position>> Board::getPossibleMoves(const Piece& piece) c
 }
 
 // Get all pieces that can move for a specific player
-std::vector<Piece> Board::getPiecesCanMove(const std::string& playerName) const {
+std::vector<Piece> Board::getMoveablePieces(const std::string& playerName) const {
     std::vector<Piece> movablePieces;
     
     // Iterate through all positions on the board
@@ -237,24 +231,15 @@ std::vector<Piece> Board::getPiecesCanMove(const std::string& playerName) const 
             Piece* piece = grid[x][y];
             
             // Check if there's a piece at this position and it belongs to the specified player
-            if (piece && piece->getColor() == playerName) {
-                // Check if this piece has any possible moves
-                if (!getPossibleMoves(*piece).empty()) {
-                    movablePieces.push_back(*piece);
+            if (piece && piece->getColor() == playerName) {            // Check if this piece has any possible moves
+            if (!getTargetPositions(*piece).empty()) {
+                movablePieces.push_back(*piece);
                 }
             }
         }
     }
     
     return movablePieces;
-}
-
-// Get piece at specific position
-Piece* Board::getPieceAt(const Position& pos) const {
-    if (pos.x >= 0 && pos.x < 8 && pos.y >= 0 && pos.y < 8) {
-        return grid[pos.x][pos.y];
-    }
-    return nullptr;
 }
 
 std::string Board::getCurrentPlayer() const {
