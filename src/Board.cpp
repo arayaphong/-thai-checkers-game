@@ -21,23 +21,36 @@ void Board::initialize(const std::string& p1, const std::string& p2) {
     player1Name = p1;
     player2Name = p2;
     currentPlayer = player1Name;
-    // Clear board
-    for (auto& row : grid) {
-        for (auto& piece : row) {
+    clearBoard();
+
+    // Initialize the board with 8:8 pieces each
+    grid.resize(8, std::vector<Piece*>(8, nullptr));
+
+    // place pieces for player 1 (X)
+    for (int row = 0; row < 2; ++row) {
+        for (int col = (row % 2); col < 8; col += 2) {
+            grid[row][col] = new Piece(player1Name, {row, col});
+        }
+    }
+
+    // place pieces for player 2 (O)
+    for (int row = 6; row < 8; ++row) {
+        for (int col = (row % 2); col < 8; col += 2) {
+            grid[row][col] = new Piece(player2Name, {row, col});
+        }
+    }
+}
+
+void Board::clearBoard()
+{
+    for (auto &row : grid)
+    {
+        for (auto &piece : row)
+        {
             delete piece;
             piece = nullptr;
         }
     }
-    // Set up initial pieces with a lambda (no OpenMP)
-    auto place_pieces = [&](int row_start, int row_end, const std::string& player) {
-        for (int i = row_start; i < row_end; ++i) {
-            for (int j = (i % 2); j < 8; j += 2) {
-                grid[i][j] = new Piece(player, {i, j});
-            }
-        }
-    };
-    place_pieces(0, 2, player1Name);
-    place_pieces(6, 8, player2Name);
 }
 
 void Board::display() const {
