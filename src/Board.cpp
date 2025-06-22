@@ -1,5 +1,6 @@
 #include "Board.h"
 #include "KingPiece.h"
+#include <algorithm>  // for remove_if
 #include <iostream>
 #include <vector>
 #include <functional>
@@ -97,104 +98,122 @@ void Board::display() const {
     }
 }
 
-std::vector<std::vector<Position>> Board::getTargetPositions(const Piece& piece) const {
-    Position pos = piece.getPosition();
-    std::vector<std::vector<Position>> allMoves;
-    int x = pos.x;
-    int y = pos.y;
-    if (x < 0 || x >= 8 || y < 0 || y >= 8) return allMoves;
-    Piece* p = grid[x][y];
-    if (!p) return allMoves;
+// Wrapper for choice paths, delegates to getStates
+std::vector<std::vector<Position>> Board::getChoices(const Piece& piece) const {
+    States s = const_cast<Board*>(this)->getStates(piece);
+    return s.getChoices();
+}
 
-    // Determine movement directions
+// Generate all possible move paths wrapped in a States object
+States Board::getStates(const Piece& piece) {
+    States s;
+    s.board = this;
+    s.piece = &piece;
+    // replicate getTargetPositions logic here
+    Position pos = piece.getPosition();
+    int x = pos.x, y = pos.y;
+    if (x < 0 || x >= 8 || y < 0 || y >= 8) return s;
+    Piece* p = grid[x][y];
+    if (!p) return s;
+    // movement dirs
     std::vector<std::pair<int,int>> dirs;
     if (p->getType() == Piece::Type::Regular) {
-        if (p->getColor() == player1Name) {
-            dirs = {{1, 1}, {1, -1}};
-        } else if (p->getColor() == player2Name) {
-            dirs = {{-1, 1}, {-1, -1}};
-        }
+        if (p->getColor() == player1Name) dirs = {{1,1},{1,-1}};
+        else dirs = {{-1,1},{-1,-1}};
     } else {
-        // King moves both directions
-        dirs = {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
+        dirs = {{1,1},{1,-1},{-1,1},{-1,-1}};
     }
-
-    // Simple moves (single-step)
-    for (auto [dx, dy] : dirs) {
-        int nx = x + dx;
-        int ny = y + dy;
-        if (nx >= 0 && nx < 8 && ny >= 0 && ny < 8 && !grid[nx][ny]) {
-            allMoves.push_back({{nx, ny}});
-        }
+    // simple moves
+    std::vector<std::vector<Position>>& allMoves = s.choices;
+    for (auto [dx,dy] : dirs) {
+        int nx = x+dx, ny = y+dy;
+        if (nx>=0&&nx<8&&ny>=0&&ny<8 && !grid[nx][ny])
+            allMoves.push_back({{nx,ny}});
     }
-
-    // Capture moves (including chains)
+    // capture chains
+    auto gridCopy = grid;
     std::vector<Position> path;
-    std::vector<std::vector<Position>> capturePaths;
-    auto gridCopy = grid; // copy board state for simulation
-    std::function<void(int,int)> dfs = [&](int cx, int cy) {
-        bool foundCapture = false;
-        for (auto [dx, dy] : dirs) {
-            int mx = cx + dx;
-            int my = cy + dy;
-            int lx = cx + 2*dx;
-            int ly = cy + 2*dy;
-            if (mx >= 0 && mx < 8 && my >= 0 && my < 8 &&
-                lx >= 0 && lx < 8 && ly >= 0 && ly < 8 &&
-                gridCopy[mx][my] && gridCopy[mx][my]->getColor() != p->getColor() &&
-                !gridCopy[lx][ly]) {
-
-                foundCapture = true;
-                // simulate capture
-                Piece* captured = gridCopy[mx][my];
-                gridCopy[cx][cy] = nullptr;
-                gridCopy[mx][my] = nullptr;
-                gridCopy[lx][ly] = p;
-                path.push_back({lx, ly});
-
-                dfs(lx, ly);
-
-                // restore state
-                path.pop_back();
-                gridCopy[cx][cy] = p;
-                gridCopy[mx][my] = captured;
-                gridCopy[lx][ly] = nullptr;
+    std::vector<std::vector<Position>> capPaths;
+    std::function<void(int,int)> dfs = [&](int cx,int cy){
+        bool found=false;
+        for(auto [dx,dy]:dirs){
+            int mx=cx+dx, my=cy+dy, lx=cx+2*dx, ly=cy+2*dy;
+            if(mx>=0&&mx<8&&my>=0&&my<8&&lx>=0&&lx<8&&ly>=0&&ly<8&&
+               gridCopy[mx][my]&&gridCopy[mx][my]->getColor()!=p->getColor()&&
+               !gridCopy[lx][ly]){
+                found=true;
+                Piece* cap=gridCopy[mx][my];
+                gridCopy[cx][cy]=nullptr; gridCopy[mx][my]=nullptr; gridCopy[lx][ly]=p;
+                path.push_back({lx,ly}); dfs(lx,ly);
+                path.pop_back(); gridCopy[cx][cy]=p; gridCopy[mx][my]=cap; gridCopy[lx][ly]=nullptr;
             }
         }
-        if (!foundCapture && !path.empty()) {
-            capturePaths.push_back(path);
-        }
+        if(!found && !path.empty()) capPaths.push_back(path);
     };
-    dfs(x, y);
-
-    // Add capture paths after simple moves
-    for (auto& seq : capturePaths) {
-        allMoves.push_back(seq);
+    dfs(x,y);
+    for(auto &seq:capPaths) allMoves.push_back(seq);
+    // detect captures and filter simple if needed
+    Position start = pos;
+    for(auto &pathOpt:allMoves) if(!pathOpt.empty()&& std::abs(pathOpt[0].x-start.x)==2){ s.hasCapture=true; break; }
+    if(s.hasCapture){
+        auto &ch=allMoves;
+        ch.erase(std::remove_if(ch.begin(),ch.end(),[&](auto &p){ return p.empty()|| std::abs(p[0].x-start.x)!=2;}), ch.end());
     }
-    return allMoves;
+    return s;
+}
+
+// Apply a selected path back to the board, moving the piece and removing captures
+void States::selectMove(const std::vector<Position>& path) {
+    if (!board || !piece || path.empty()) return;
+    Position from = piece->getPosition();
+    int x0 = from.x;
+    int y0 = from.y;
+    // extract the pointer to the actual Piece
+    Piece* p = board->grid[x0][y0];
+    board->grid[x0][y0] = nullptr;
+    // follow the chosen path
+    for (const auto& pos : path) {
+        int x1 = pos.x;
+        int y1 = pos.y;
+        int dx = x1 - x0;
+        int dy = y1 - y0;
+        // if this is a capture jump, remove the jumped piece
+        if (std::abs(dx) == 2 && std::abs(dy) == 2) {
+            int mx = x0 + dx/2;
+            int my = y0 + dy/2;
+            delete board->grid[mx][my];
+            board->grid[mx][my] = nullptr;
+        }
+        // move piece pointer
+        p->setPosition({x1, y1});
+        x0 = x1; y0 = y1;
+    }
+    // place on final square
+    board->grid[x0][y0] = p;
+    // optionally switch current player
+    if (!board->player1Name.empty() && !board->player2Name.empty()) {
+        board->currentPlayer = (board->currentPlayer == board->player1Name)
+            ? board->player2Name : board->player1Name;
+    }
 }
 
 // Get all pieces that can move for a specific player
 std::vector<Piece> Board::getMoveablePieces(const std::string& playerName) const {
     std::vector<Piece> movablePieces;
-    
-    // Iterate through all positions on the board
     for (int x = 0; x < 8; ++x) {
         for (int y = 0; y < 8; ++y) {
             Piece* piece = grid[x][y];
-            
-            // Check if there's a piece at this position and it belongs to the specified player
-            if (piece && piece->getColor() == playerName) {            // Check if this piece has any possible moves
-            if (!getTargetPositions(*piece).empty()) {
-                movablePieces.push_back(*piece);
+            if (piece && piece->getColor() == playerName) {
+                if (!getChoices(*piece).empty()) {
+                    movablePieces.push_back(*piece);
                 }
             }
         }
     }
-    
     return movablePieces;
 }
 
+// Return the current player's name
 std::string Board::getCurrentPlayer() const {
     return currentPlayer;
 }

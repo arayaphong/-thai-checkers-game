@@ -33,5 +33,5 @@ std::vector<Piece> THCheckers::getMoveablePieces() const {
 
 // Get possible move sequences for piece at given position, delegate to Board
 std::vector<std::vector<Position>> THCheckers::getTargetPositions(const Piece& piece) const {
-    return board.getTargetPositions(piece);
+    return board.getChoices(piece);
 }
