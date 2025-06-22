@@ -5,6 +5,7 @@ set(TEST_SOURCES
     BoardTests.cpp
     PieceTests.cpp
     THCheckersTests.cpp
+    BoardDisplayTests.cpp
 )
 
 # Create the test executable
@@ -23,3 +24,4 @@ enable_testing()
 add_test(NAME BoardTests COMMAND ThaiCheckersTests)
 add_test(NAME PieceTests COMMAND ThaiCheckersTests)
 add_test(NAME THCheckersTests COMMAND ThaiCheckersTests)
+add_test(NAME BoardDisplayTests COMMAND ThaiCheckersTests)

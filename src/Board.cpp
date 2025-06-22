@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <functional>
+#include <set> // Add include for set to detect player names
 
 Board::Board() {
     grid.resize(8, std::vector<Piece*>(8, nullptr));
@@ -19,6 +20,22 @@ Board::~Board() {
 void Board::initialize(const std::vector<std::vector<Piece*>>& initialGrid) {
     clearBoard();
     grid = initialGrid;
+    // detect player names for custom grid initialization
+    std::set<std::string> names;
+    for (const auto& row : grid) {
+        for (const auto& p : row) {
+            if (p) names.insert(p->getColor());
+        }
+    }
+    auto it = names.begin();
+    if (names.size() >= 1) {
+        player1Name = *it;
+        ++it;
+    }
+    if (names.size() >= 2) {
+        player2Name = *it;
+    }
+    currentPlayer = player1Name;
 }
 
 void Board::initialize(const std::string& p1, const std::string& p2) {
@@ -59,10 +76,17 @@ void Board::clearBoard()
 }
 
 void Board::display() const {
-    for (const auto& row : grid) {
-        for (const auto& piece : row) {
+    // Print column indices
+    std::cout << "  ";
+    for (int j = 0; j < 8; ++j) {
+        std::cout << j << " ";
+    }
+    std::cout << std::endl;
+    // Print each row with row index
+    for (int i = 0; i < 8; ++i) {
+        std::cout << i << " ";
+        for (const auto& piece : grid[i]) {
             if (piece) {
-                // Display X for first player and O for second
                 char symbol = (piece->getColor() == player1Name) ? 'X' : 'O';
                 std::cout << symbol << " ";
             } else {

@@ -43,45 +43,58 @@ TEST_F(BoardTests, GetMoveablePieces) {
         EXPECT_EQ(pos.x, 6);
     }
 }
-/*
-TEST_F(BoardTests, GetMoveablePiecesAfterMove) {
-    std::vector<Piece> player1InitialPieces = board.getMoveablePieces("Player1");
-    size_t initialCount = player1InitialPieces.size();
 
-    auto pieces = board.getMoveablePieces(board.getCurrentPlayer());
-    auto moves = board.getTargetPositions(pieces[0]);
+// New tests for custom grid initialization and move scenarios
+TEST_F(BoardTests, CustomGridInitializeSimpleMove) {
+    // Create empty 8x8 grid
+    std::vector<std::vector<Piece*>> customGrid(8, std::vector<Piece*>(8, nullptr));
+    // Place a Player1 piece at (3,3)
+    customGrid[3][3] = new Piece("Player1", {3, 3});
+    board.initialize(customGrid);
     
-    // Make a move
-    ASSERT_TRUE(board.movePiece(1, 1, 2, 2));
+    // Get possible moves for the piece
+    auto moves = board.getTargetPositions(*customGrid[3][3]);
+    // Should have two simple moves
+    ASSERT_EQ(moves.size(), 2);
+    bool found1 = false, found2 = false;
+    for (const auto& seq : moves) {
+        ASSERT_EQ(seq.size(), 1);
+        Position p = seq[0];
+        if (p.x == 4 && p.y == 4) found1 = true;
+        if (p.x == 4 && p.y == 2) found2 = true;
+    }
+    EXPECT_TRUE(found1 && found2);
     
-    // After P1 moves, let's assume getMoveablePieces is for a given player regardless of turn.
-    // The piece at (0,0) and (0,2) might now be able to move.
-    std::vector<Piece> player1AfterMove = board.getMoveablePieces("Player1");
-    size_t afterMoveCount = player1AfterMove.size();
-    
-    // The number of pieces that can move should have changed.
-    EXPECT_NE(initialCount, afterMoveCount);
+    // Check getMoveablePieces returns the piece at (3,3)
+    auto pieces = board.getMoveablePieces("Player1");
+    ASSERT_EQ(pieces.size(), 1);
+    EXPECT_EQ(pieces[0].getPosition().x, 3);
+    EXPECT_EQ(pieces[0].getPosition().y, 3);
 }
 
-TEST_F(BoardTests, GetMoveablePiecesCaptureScenario) {
-    // Set up a capture scenario
-    ASSERT_TRUE(board.movePiece(1, 1, 2, 2));
-    ASSERT_TRUE(board.movePiece(6, 2, 5, 1));
-    ASSERT_TRUE(board.movePiece(2, 2, 3, 3));
-    ASSERT_TRUE(board.movePiece(5, 1, 4, 2));
+TEST_F(BoardTests, CustomGridInitializeCaptureMove) {
+    // Create empty 8x8 grid
+    std::vector<std::vector<Piece*>> customGrid(8, std::vector<Piece*>(8, nullptr));
+    // Place Player1 piece at (2,2) and Player2 at (3,3)
+    customGrid[2][2] = new Piece("Player1", {2, 2});
+    customGrid[3][3] = new Piece("Player2", {3, 3});
+    board.initialize(customGrid);
     
-    // Now, Player1 should have a capture opportunity.
-    // The piece at (3,3) can capture the piece at (4,2).
-    // We can check if (3,3) is in the list of pieces that can move.
-    std::vector<Piece> player1Pieces = board.getMoveablePieces("Player1");
-    bool found_capture_piece = false;
-    for (const auto& piece : player1Pieces) {
-        Position pos = piece.getPosition();
-        if (pos.x == 3 && pos.y == 3) {
-            found_capture_piece = true;
+    // Get possible moves (including captures) for the piece
+    auto moves = board.getTargetPositions(*customGrid[2][2]);
+    // Should include a capture path to (4,4)
+    bool foundCapture = false;
+    for (const auto& seq : moves) {
+        if (seq.size() == 1 && seq[0].x == 4 && seq[0].y == 4) {
+            foundCapture = true;
             break;
         }
     }
-    EXPECT_TRUE(found_capture_piece);
+    EXPECT_TRUE(foundCapture) << "Expected a capture move to (4,4)";
+    
+    // Check getMoveablePieces returns the piece at (2,2)
+    auto pieces = board.getMoveablePieces("Player1");
+    ASSERT_EQ(pieces.size(), 1);
+    EXPECT_EQ(pieces[0].getPosition().x, 2);
+    EXPECT_EQ(pieces[0].getPosition().y, 2);
 }
-*/
