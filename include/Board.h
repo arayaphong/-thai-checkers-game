@@ -10,7 +10,7 @@ class Board {
 public:
     Board();
     ~Board();
-    // Initialize board with default or custom player names
+    void initialize(const std::vector<std::vector<Piece*>>& grid);
     void initialize(const std::string &player1Name, const std::string &player2Name);
     void display() const;
     std::vector<std::vector<Position>> getTargetPositions(const Piece& piece) const;
@@ -19,8 +19,6 @@ public:
     
     private:
     void clearBoard();
-    bool movePiece(int startX, int startY, int endX, int endY);
-    bool isValidMove(int startX, int startY, int endX, int endY) const;
     std::vector<std::vector<Piece*>> grid;
     // Store player names for piece creation and display logic
     std::string player1Name;

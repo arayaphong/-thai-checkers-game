@@ -16,6 +16,11 @@ Board::~Board() {
     }
 }
 
+void Board::initialize(const std::vector<std::vector<Piece*>>& initialGrid) {
+    clearBoard();
+    grid = initialGrid;
+}
+
 void Board::initialize(const std::string& p1, const std::string& p2) {
     // Store player names
     player1Name = p1;
@@ -66,95 +71,6 @@ void Board::display() const {
         }
         std::cout << std::endl;
     }
-}
-
-bool Board::isValidMove(int startX, int startY, int endX, int endY) const {
-    if (startX < 0 || startX >= 8 || startY < 0 || startY >= 8 ||
-        endX < 0 || endX >= 8 || endY < 0 || endY >= 8) {
-        return false;
-    }
-
-    Piece* piece = grid[startX][startY];
-    if (!piece || piece->getColor() != currentPlayer) {
-        return false;
-    }
-
-    if (grid[endX][endY] != nullptr) {
-        return false; // Destination must be empty
-    }
-
-    int dx = endX - startX;
-    int dy = endY - startY;
-
-    if (piece->getType() == Piece::Type::Regular) {
-        int forward_dir = (piece->getColor() == player1Name) ? 1 : -1;
-        if (abs(dx) == 1 && dx == forward_dir && abs(dy) == 1) {
-            return true; // Regular move
-        }
-        if (abs(dx) == 2 && dx == 2 * forward_dir && abs(dy) == 2) {
-            Piece* captured = grid[startX + dx / 2][startY + dy / 2];
-            if (captured && captured->getColor() != piece->getColor()) {
-                return true; // Capture
-            }
-        }
-    } else { // King
-        if (abs(dx) == abs(dy)) {
-            // Check for blocking pieces along the path for non-capture moves
-            if (abs(dx) == 1) return true;
-
-            // Check for captures
-            int stepX = dx / abs(dx);
-            int stepY = dy / abs(dy);
-            int steps = abs(dx);
-            int piecesToJump = 0;
-            Piece* captured = nullptr;
-            for (int i = 1; i < steps; ++i) {
-                Piece* p = grid[startX + i * stepX][startY + i * stepY];
-                if (p) {
-                    piecesToJump++;
-                    captured = p;
-                }
-            }
-            if (piecesToJump == 1 && captured && captured->getColor() != piece->getColor()) {
-                return true;
-            }
-        }
-    }
-
-    return false;
-}
-
-bool Board::movePiece(int startX, int startY, int endX, int endY) {
-    if (isValidMove(startX, startY, endX, endY)) {
-        int dx = endX - startX;
-        // If it's a capture move, remove the captured piece
-        if (abs(dx) == 2) {
-            int capturedX = startX + dx / 2;
-            int capturedY = startY + (endY - startY) / 2;
-            delete grid[capturedX][capturedY];
-            grid[capturedX][capturedY] = nullptr;
-        }
-
-        grid[endX][endY] = grid[startX][startY];
-        grid[startX][startY] = nullptr;
-        grid[endX][endY]->setPosition({endX, endY});
-
-        // Check for promotion to King
-        Piece* moved = grid[endX][endY];
-        if (moved->getType() == Piece::Type::Regular) {
-            const std::string& color = moved->getColor();
-            if ((color == player1Name && endX == 7) || (color == player2Name && endX == 0)) {
-                delete moved;
-                grid[endX][endY] = new KingPiece(color, {endX, endY});
-            }
-        }
-        
-        // Switch turns
-        currentPlayer = (currentPlayer == player1Name) ? player2Name : player1Name;
-
-        return true;
-    }
-    return false;
 }
 
 std::vector<std::vector<Position>> Board::getTargetPositions(const Piece& piece) const {
