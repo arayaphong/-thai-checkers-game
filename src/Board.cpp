@@ -1,99 +1,54 @@
 #include "Board.h"
-#include "States.h"
-#include <algorithm>  // for remove_if
 #include <iostream>
-#include <vector>
-#include <functional>
-#include <set> // Add include for set to detect player names
-#include <memory>
+#include <iomanip>
 
-Board::Board() {
-    grid.resize(8, std::vector<Piece*>(8, nullptr));
-}
+Board::Board() : model(nullptr) {}
 
-Board::~Board() {
-    for (auto& row : grid) {
-        for (auto& piece : row) {
-            delete piece;
-        }
-    }
+Board::~Board() {}
+
+void Board::setModel(GameModel* m) {
+    model = m;
+    ownedModel.reset(); // Clear owned model when external model is set
 }
 
 void Board::initialize(const std::vector<std::vector<Piece*>>& initialGrid) {
-    clearBoard();
-    grid = initialGrid;
-    // detect player names for custom grid initialization
-    std::set<std::string> names;
-    for (const auto& row : grid) {
-        for (const auto& p : row) {
-            if (p) names.insert(p->getColor());
-        }
-    }
-    auto it = names.begin();
-    if (names.size() >= 1) {
-        player1Name = *it;
-        ++it;
-    }
-    if (names.size() >= 2) {
-        player2Name = *it;
-    }
-    currentPlayer = player1Name;
-}
-
-void Board::setTurn(const std::string& color) {
-    currentPlayer = color;
+    ownedModel = std::make_unique<GameModel>();
+    ownedModel->initializeFromGrid(initialGrid);
+    model = ownedModel.get();
 }
 
 void Board::initialize(const std::string& p1, const std::string& p2) {
-    // Store player names
-    player1Name = p1;
-    player2Name = p2;
-    currentPlayer = player1Name;
-    clearBoard();
-
-    // Initialize the board with 8:8 pieces each
-    grid.resize(8, std::vector<Piece*>(8, nullptr));
-
-    // place pieces for player 1 (X)
-    for (int row = 0; row < 2; ++row) {
-        for (int col = (row % 2); col < 8; col += 2) {
-            grid[row][col] = new Piece(player1Name, {row, col});
-        }
-    }
-
-    // place pieces for player 2 (O)
-    for (int row = 6; row < 8; ++row) {
-        for (int col = (row % 2); col < 8; col += 2) {
-            grid[row][col] = new Piece(player2Name, {row, col});
-        }
-    }
+    ownedModel = std::make_unique<GameModel>();
+    ownedModel->initializeStandardGame(p1, p2);
+    model = ownedModel.get();
 }
 
-void Board::clearBoard()
-{
-    for (auto &row : grid)
-    {
-        for (auto &piece : row)
-        {
-            delete piece;
-            piece = nullptr;
-        }
+void Board::setTurn(const std::string& color) {
+    if (model) {
+        model->setCurrentPlayer(color);
     }
 }
 
 void Board::display() const {
+    if (!model) return;
+    
+    auto grid = model->getBoard();
+    
     // Print column indices
     std::cout << "  ";
     for (int j = 0; j < 8; ++j) {
         std::cout << j << " ";
     }
     std::cout << std::endl;
+    
     // Print each row with row index
     for (int i = 0; i < 8; ++i) {
         std::cout << i << " ";
         for (const auto& piece : grid[i]) {
             if (piece) {
-                const char* symbol = (piece->getColor() == player1Name) ? "●" : "○";
+                // Determine symbol based on piece color
+                // Assuming player1 uses ● and player2 uses ○
+                const char* symbol = (piece->getColor() == "Player1" || piece->getColor() == "P1") ? "●" : "○";
                 std::cout << symbol << " ";
             } else {
                 std::cout << ". ";
@@ -103,110 +58,72 @@ void Board::display() const {
     }
 }
 
-// Generate all possible move paths wrapped in a States object
-States Board::getStates(const Piece& piece) const {
-    States s;
-    s.board = const_cast<Board*>(this);
-    s.piece = &piece;
-    // replicate getTargetPositions logic here
-    Position pos = piece.getPosition();
-    int x = pos.x, y = pos.y;
-    if (x < 0 || x >= 8 || y < 0 || y >= 8) return s;
-    Piece* p = grid[x][y];
-    if (!p) return s;
-    // movement dirs for regular pieces only
-    std::vector<std::pair<int,int>> dirs;
-    if (p->getColor() == player1Name) dirs = {{1,1},{1,-1}};
-    else dirs = {{-1,1},{-1,-1}};
-    // simple moves
-    std::vector<std::vector<Position>>& allMoves = s.choices;
-    for (auto [dx,dy] : dirs) {
-        int nx = x+dx, ny = y+dy;
-        if (nx>=0&&nx<8&&ny>=0&&ny<8 && !grid[nx][ny])
-            allMoves.push_back({{nx,ny}});
-    }
-    // capture chains
-    auto gridCopy = grid;
-    std::vector<Position> path;
-    std::vector<std::vector<Position>> capPaths;
-    std::function<void(int,int)> dfs = [&](int cx,int cy){
-        bool found=false;
-        for(auto [dx,dy]:dirs){
-            int mx=cx+dx, my=cy+dy, lx=cx+2*dx, ly=cy+2*dy;
-            if(mx>=0&&mx<8&&my>=0&&my<8&&lx>=0&&lx<8&&ly>=0&&ly<8&&
-               gridCopy[mx][my]&&gridCopy[mx][my]->getColor()!=p->getColor()&&
-               !gridCopy[lx][ly]){
-                found=true;
-                Piece* cap=gridCopy[mx][my];
-                gridCopy[cx][cy]=nullptr; gridCopy[mx][my]=nullptr; gridCopy[lx][ly]=p;
-                path.push_back({lx,ly}); dfs(lx,ly);
-                path.pop_back(); gridCopy[cx][cy]=p; gridCopy[mx][my]=cap; gridCopy[lx][ly]=nullptr;
-            }
+void Board::displayMoveHistory() const {
+    if (!model) return;
+    
+    auto history = model->getMoveHistory();
+    std::cout << "Move History:\n";
+    for (size_t i = 0; i < history.size(); ++i) {
+        const auto& move = history[i];
+        std::cout << i + 1 << ". " << move.player << ": ";
+        std::cout << "(" << move.from.x << "," << move.from.y << ") -> ";
+        for (const auto& pos : move.path) {
+            std::cout << "(" << pos.x << "," << pos.y << ") ";
         }
-        if(!found && !path.empty()) capPaths.push_back(path);
-    };
-    dfs(x,y);
-    for(auto &seq:capPaths) allMoves.push_back(seq);
-    // detect captures and filter simple if needed
-    Position start = pos;
-    for(auto &pathOpt:allMoves) if(!pathOpt.empty()&& std::abs(pathOpt[0].x-start.x)==2){ s.hasCapture=true; break; }
-    if(s.hasCapture){
-        auto &ch=allMoves;
-        ch.erase(std::remove_if(ch.begin(),ch.end(),[&](auto &p){ return p.empty()|| std::abs(p[0].x-start.x)!=2;}), ch.end());
+        if (move.isCapture()) {
+            std::cout << "[captured " << move.captureCount() << "]";
+        }
+        std::cout << "\n";
     }
-    return s;
+}
+
+void Board::displayStatistics() const {
+    if (!model) return;
+    
+    std::cout << "Game Statistics:\n";
+    std::cout << "Current Player: " << model->getCurrentPlayer() << "\n";
+    std::cout << "Piece Count:\n";
+    // This assumes we know the player names
+    // In practice, we'd get these from the model
+    std::cout << "  Player1: " << model->getPieceCount("Player1") << "\n";
+    std::cout << "  Player2: " << model->getPieceCount("Player2") << "\n";
+    std::cout << "Total Moves: " << model->getMoveHistory().size() << "\n";
+}
+
+std::vector<Move> Board::getValidMovesFor(const Position& pos) const {
+    if (!model) return {};
+    return model->getValidMoves(pos);
+}
+
+std::map<Position, std::vector<Move>> Board::getAllValidMoves() const {
+    if (!model) return {};
+    return model->getAllValidMoves();
+}
+
+void Board::executeMove(const Move& move) {
+    if (model) {
+        model->executeMove(move);
+    }
 }
 
 std::vector<std::unique_ptr<Piece>> Board::getMoveablePieces() const {
+    if (!model) return {};
+    
     std::vector<std::unique_ptr<Piece>> moveablePieces;
-    for (const auto& row : grid) {
-        for (const auto* piece : row) {
-            if (piece && piece->getColor() == currentPlayer) {
-                // A piece is moveable if it has any valid moves.
-                if (!const_cast<Board*>(this)->getStates(*piece).getChoices().empty()) {
-                    moveablePieces.push_back(std::make_unique<Piece>(*piece));
-                }
+    auto allMoves = model->getAllValidMoves();
+    
+    for (const auto& [pos, moves] : allMoves) {
+        if (!moves.empty()) {
+            auto grid = model->getBoard();
+            if (grid[pos.x][pos.y]) {
+                moveablePieces.push_back(std::make_unique<Piece>(*grid[pos.x][pos.y]));
             }
         }
     }
+    
     return moveablePieces;
 }
 
-// Apply a selected path back to the board, moving the piece and removing captures
-void States::selectMove(const std::vector<Position>& path) {
-    if (!board || !piece || path.empty()) return;
-    Position from = piece->getPosition();
-    int x0 = from.x;
-    int y0 = from.y;
-    // extract the pointer to the actual Piece
-    Piece* p = board->grid[x0][y0];
-    board->grid[x0][y0] = nullptr;
-    // follow the chosen path
-    for (const auto& pos : path) {
-        int x1 = pos.x;
-        int y1 = pos.y;
-        int dx = x1 - x0;
-        int dy = y1 - y0;
-        // if this is a capture jump, remove the jumped piece
-        if (std::abs(dx) == 2 && std::abs(dy) == 2) {
-            int mx = x0 + dx/2;
-            int my = y0 + dy/2;
-            delete board->grid[mx][my];
-            board->grid[mx][my] = nullptr;
-        }
-        // move piece pointer
-        p->setPosition({x1, y1});
-        x0 = x1; y0 = y1;
-    }
-    // place on final square
-    board->grid[x0][y0] = p;
-    // optionally switch current player
-    if (!board->player1Name.empty() && !board->player2Name.empty()) {
-        board->currentPlayer = (board->currentPlayer == board->player1Name)
-            ? board->player2Name : board->player1Name;
-    }
-}
-
 std::string Board::getCurrentPlayer() const {
-    return currentPlayer;
+    return model ? model->getCurrentPlayer() : "";
 }

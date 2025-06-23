@@ -58,14 +58,14 @@ TEST_F(BoardTests, CustomGridInitializeSimpleMove) {
     board.initialize(customGrid);
     board.setTurn("Player1");
     
-    // Get possible moves for the piece
-    auto moves = board.getStates(*customGrid[3][3]).getChoices();
+    // Get possible moves for the piece - NEW API
+    auto moves = board.getValidMovesFor({3, 3});
     // Should have two simple moves
     ASSERT_EQ(moves.size(), 2);
     bool found1 = false, found2 = false;
-    for (const auto& seq : moves) {
-        ASSERT_EQ(seq.size(), 1);
-        Position p = seq[0];
+    for (const auto& move : moves) {
+        ASSERT_EQ(move.path.size(), 1);
+        Position p = move.path[0];
         if (p.x == 4 && p.y == 4) found1 = true;
         if (p.x == 4 && p.y == 2) found2 = true;
     }
@@ -87,12 +87,12 @@ TEST_F(BoardTests, CustomGridInitializeCaptureMove) {
     board.initialize(customGrid);
     board.setTurn("Player1");
     
-    // Get possible moves (including captures) for the piece
-    auto moves = board.getStates(*customGrid[2][2]).getChoices();
+    // Get possible moves (including captures) for the piece - NEW API
+    auto moves = board.getValidMovesFor({2, 2});
     // Should include a capture path to (4,4)
     bool foundCapture = false;
-    for (const auto& seq : moves) {
-        if (seq.size() == 1 && seq[0].x == 4 && seq[0].y == 4) {
+    for (const auto& move : moves) {
+        if (move.path.size() == 1 && move.path[0].x == 4 && move.path[0].y == 4) {
             foundCapture = true;
             break;
         }
@@ -114,13 +114,13 @@ TEST_F(BoardTests, MultiChoiceCapture) {
     grid[3][3] = new Piece("Player2", {3, 3});
     board.initialize(grid);
     board.setTurn("Player1");
-    auto moves = board.getStates(*grid[2][2]).getChoices();
+    auto moves = board.getValidMovesFor({2, 2});
     // Expect two capture options
     ASSERT_EQ(moves.size(), 2u);
     std::set<std::pair<int,int>> targets;
-    for (const auto& seq : moves) {
-        ASSERT_EQ(seq.size(), 1u);
-        targets.emplace(seq[0].x, seq[0].y);
+    for (const auto& move : moves) {
+        ASSERT_EQ(move.path.size(), 1u);
+        targets.emplace(move.path[0].x, move.path[0].y);
     }
     EXPECT_EQ(targets, (std::set<std::pair<int,int>>{{4,0}, {4,4}}));
     auto pieces = board.getMoveablePieces();
@@ -138,13 +138,17 @@ TEST_F(BoardTests, ChainCaptureMultiChoice) {
     grid[3][1] = new Piece("Player2", {3, 1});
     board.initialize(grid);
     board.setTurn("Player1");
-    auto moves = board.getStates(*grid[0][0]).getChoices();
+    auto moves = board.getValidMovesFor({0, 0});
     // Expect two distinct chains of two captures
     ASSERT_EQ(moves.size(), 2u);
     std::set<std::vector<std::pair<int,int>>> chains;
-    for (const auto& seq : moves) {
-        ASSERT_EQ(seq.size(), 2u);
-        chains.insert({{seq[0].x, seq[0].y}, {seq[1].x, seq[1].y}});
+    for (const auto& move : moves) {
+        ASSERT_EQ(move.path.size(), 2u);
+        std::vector<std::pair<int,int>> chain;
+        for (const auto& pos : move.path) {
+            chain.push_back({pos.x, pos.y});
+        }
+        chains.insert(chain);
     }
     std::set<std::vector<std::pair<int,int>>> expected = {
         {{2,2}, {4,4}},
@@ -165,14 +169,14 @@ TEST_F(BoardTests, MultiCaptureChain) {
     grid[3][3] = new Piece("Player2", {3, 3});
     board.initialize(grid);
     board.setTurn("Player1");
-    auto moves = board.getStates(*grid[0][0]).getChoices();
+    auto moves = board.getValidMovesFor({0, 0});
     ASSERT_EQ(moves.size(), 1u);
-    const auto& seq = moves.front();
-    ASSERT_EQ(seq.size(), 2u);
-    EXPECT_EQ(seq[0].x, 2);
-    EXPECT_EQ(seq[0].y, 2);
-    EXPECT_EQ(seq[1].x, 4);
-    EXPECT_EQ(seq[1].y, 4);
+    const auto& move = moves[0];
+    ASSERT_EQ(move.path.size(), 2u);
+    EXPECT_EQ(move.path[0].x, 2);
+    EXPECT_EQ(move.path[0].y, 2);
+    EXPECT_EQ(move.path[1].x, 4);
+    EXPECT_EQ(move.path[1].y, 4);
     auto pieces = board.getMoveablePieces();
     ASSERT_EQ(pieces.size(), 1u);
     EXPECT_EQ(pieces[0]->getPosition().x, 0);
@@ -188,7 +192,7 @@ TEST_F(BoardTests, BlockedPieceScenario) {
     board.initialize(grid);
     board.setTurn("Player1");
     // central piece has no moves
-    auto noMoves = board.getStates(*grid[4][4]).getChoices();
+    auto noMoves = board.getValidMovesFor({4, 4});
     EXPECT_TRUE(noMoves.empty());
     // only the surrounding two pieces can move
     auto pieces = board.getMoveablePieces();
@@ -251,9 +255,9 @@ TEST_F(BoardTests, CustomMidGameScenario) {
     EXPECT_EQ(coords, (std::set<std::pair<int,int>>{{0,0},{0,2},{1,3},{1,5},{1,7},{2,0}}));
 
     // Test capture move for piece at (2,0)
-    auto moves = board.getStates(*grid[2][0]).getChoices();
+    auto moves = board.getValidMovesFor({2, 0});
     ASSERT_EQ(moves.size(), 1u);
-    ASSERT_EQ(moves[0].size(), 1u);
-    EXPECT_EQ(moves[0][0].x, 3);
-    EXPECT_EQ(moves[0][0].y, 1);
+    ASSERT_EQ(moves[0].path.size(), 1u);
+    EXPECT_EQ(moves[0].path[0].x, 3);
+    EXPECT_EQ(moves[0].path[0].y, 1);
 }

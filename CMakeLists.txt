@@ -12,7 +12,7 @@ include_directories(include)
 set(LIB_SOURCES
     src/Board.cpp
     src/Piece.cpp
-    src/States.cpp
+    src/GameModel.cpp  # Add new GameModel
 )
 
 # Create a library from the source files

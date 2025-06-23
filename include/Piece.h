@@ -2,28 +2,23 @@
 #define PIECE_H
 
 #include <string>
-
-struct Position {
-    int x;
-    int y;
-
-    bool operator==(const Position& other) const {
-        return x == other.x && y == other.y;
-    }
-};
+#include "Position.h"
 
 class Piece {
 public:
-    enum class Type { Regular, Dame };    // added type enum
+    enum class Type { Regular, Dame };
+    
     Piece();
-    Piece(const Piece& piece) = default;  // copy constructor
-    Piece(const std::string& color, Position position)
+    Piece(const Piece& piece) = default;
+    Piece(const std::string& color, const Position& position)
         : color(color), position(position) {}
+    
     const std::string& getColor() const;
     Position getPosition() const;
-    void setPosition(Position newPosition);
-    virtual ~Piece() = default;            // make base class polymorphic
-    virtual Type getType() const { return Type::Regular; }  // default type
+    void setPosition(const Position& newPosition);
+    
+    virtual ~Piece() = default;
+    virtual Type getType() const { return Type::Regular; }
 
 private:
     std::string color;

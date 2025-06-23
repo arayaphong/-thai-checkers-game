@@ -5,7 +5,8 @@ set(TEST_SOURCES
     BoardTests.cpp
     PieceTests.cpp
     BoardDisplayTests.cpp
-    StatesTest.cpp
+    GameModelTests.cpp
+    # Removed StatesTest.cpp - States class no longer exists
 )
 
 # Create the test executable
@@ -24,4 +25,5 @@ enable_testing()
 add_test(NAME BoardTests COMMAND ThaiCheckersTests)
 add_test(NAME PieceTests COMMAND ThaiCheckersTests)
 add_test(NAME BoardDisplayTests COMMAND ThaiCheckersTests)
-add_test(NAME StatesTest COMMAND ThaiCheckersTests)
+add_test(NAME GameModelTests COMMAND ThaiCheckersTests)
+# Removed StatesTest

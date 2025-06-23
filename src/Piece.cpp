@@ -10,6 +10,6 @@ Position Piece::getPosition() const {
     return position;
 }
 
-void Piece::setPosition(Position newPosition) {
+void Piece::setPosition(const Position& newPosition) {
     position = newPosition;
 }
