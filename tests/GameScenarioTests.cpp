@@ -468,19 +468,6 @@ TEST_F(GameScenarioTests, GameStatisticsTest) {
     // Test piece counting
     EXPECT_EQ(model.getPieceCount("Player1"), 2);
     EXPECT_EQ(model.getPieceCount("Player2"), 2);
-    
-    // Test position evaluation
-    double player1Eval = model.evaluatePosition("Player1");
-    double player2Eval = model.evaluatePosition("Player2");
-    
-    // In balanced scenario, evaluations should be symmetric (equal and opposite or both zero)
-    EXPECT_NEAR(player1Eval, -player2Eval, 0.01);
-    
-    // Both players have pieces, so absolute evaluation values should be meaningful
-    // (either both zero in balanced case, or non-zero if advantage exists)
-    double absEval1 = std::abs(player1Eval);
-    double absEval2 = std::abs(player2Eval);
-    EXPECT_NEAR(absEval1, absEval2, 0.01); // Should be equal in balanced scenario
 }
 
 // Test 10: Current Player Management

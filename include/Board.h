@@ -27,18 +27,16 @@ public:
     
     // Display methods (for debugging/visualization)
     void display() const;
-    void displayMoveHistory() const;
-    void displayStatistics() const;
     
     // Analytics-focused methods
     std::vector<Move> getValidMovesFor(const Position& pos) const;
     std::map<Position, std::vector<Move>> getAllValidMoves() const;
-    void executeMove(const Move& move);
+    void executeMove(const Move& move);  // Wrapper for model->executeMove()
     
     // Legacy compatibility (to be removed)
     void setTurn(const std::string& player);
     std::vector<std::unique_ptr<Piece>> getMoveablePieces() const;
-    std::string getCurrentPlayer() const;
+    std::string getCurrentPlayer() const;  // Wrapper for model->getCurrentPlayer()
 };
 
 #endif // BOARD_H

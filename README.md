@@ -24,8 +24,6 @@ thai-checkers/
 ├── include/                    # Header files for the game classes
 │   ├── Board.h                 # Board interface declaration
 │   ├── GameModel.h             # Game engine and analytics interface
-│   ├── GameAnalyzer.h          # Game analysis tools (planned)
-│   ├── GameSimulator.h         # Game simulation interface (planned)
 │   ├── Move.h                  # Move structure definitions
 │   ├── Piece.h                 # Piece class declaration
 │   └── Position.h              # Position coordinate structure
@@ -104,9 +102,10 @@ auto allMoves = board.getAllValidMoves();
 // Get moves for a specific piece
 auto moves = board.getValidMovesFor({2, 1});
 
-// Execute a move
+// Execute a move through the model
 if (!moves.empty()) {
-    board.executeMove(moves[0]);
+    GameModel* model = board.getModel();
+    model->executeMove(moves[0]);
 }
 ```
 

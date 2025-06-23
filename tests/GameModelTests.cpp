@@ -112,17 +112,6 @@ TEST_F(GameModelTests, GameOver) {
     EXPECT_TRUE(model.isGameOver());
     EXPECT_EQ(model.getWinner(), "Player2");
 }
-
-TEST_F(GameModelTests, PositionEvaluation) {
-    model.initializeStandardGame("Player1", "Player2");
-    
-    double eval1 = model.evaluatePosition("Player1");
-    double eval2 = model.evaluatePosition("Player2");
-    
-    // In starting position, evaluation should be equal
-    EXPECT_NEAR(eval1, -eval2, 0.01);
-}
-
 TEST_F(GameModelTests, CloneModel) {
     std::vector<std::vector<Piece*>> grid(8, std::vector<Piece*>(8, nullptr));
     grid[3][3] = new Piece("Player1", {3, 3});

@@ -2,37 +2,60 @@
 #include <algorithm>
 #include <set>
 
-GameModel::GameModel() : currentPlayer("Player1") {
-    grid.resize(8, std::vector<Piece*>(8, nullptr));
+namespace {
+    constexpr int BOARD_SIZE = 8;
+    
+    const std::vector<std::pair<int, int>> DIAGONAL_DIRECTIONS = {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
+}
+
+GameModel::GameModel() : currentPlayer(""), player1Name(""), player2Name("") {
+    grid.resize(BOARD_SIZE, std::vector<Piece*>(BOARD_SIZE, nullptr));
 }
 
 GameModel::~GameModel() {
-    for (auto& row : grid) {
-        for (auto& piece : row) {
-            delete piece;
-        }
-    }
+    clearGrid();
 }
 
-void GameModel::initializeStandardGame(const std::string& player1, const std::string& player2) {
-    // Clear existing pieces
+void GameModel::clearGrid() {
     for (auto& row : grid) {
         for (auto& piece : row) {
             delete piece;
             piece = nullptr;
         }
     }
+}
+
+bool GameModel::isValidPosition(const Position& pos) const {
+    return pos.x >= 0 && pos.x < BOARD_SIZE && pos.y >= 0 && pos.y < BOARD_SIZE;
+}
+
+bool GameModel::isPlayer1(const std::string& player) const {
+    return player == player1Name;
+}
+
+bool GameModel::isPlayer2(const std::string& player) const {
+    return player == player2Name;
+}
+
+std::string GameModel::getOpponent(const std::string& player) const {
+    return isPlayer1(player) ? player2Name : player1Name;
+}
+
+void GameModel::initializeStandardGame(const std::string& player1, const std::string& player2) {
+    player1Name = player1;
+    player2Name = player2;
+    clearGrid();
     
     // Place player1 pieces (top of board)
     for (int row = 0; row < 2; ++row) {
-        for (int col = (row % 2); col < 8; col += 2) {
+        for (int col = (row % 2); col < BOARD_SIZE; col += 2) {
             grid[row][col] = new Piece(player1, {row, col});
         }
     }
     
     // Place player2 pieces (bottom of board)
-    for (int row = 6; row < 8; ++row) {
-        for (int col = (row % 2); col < 8; col += 2) {
+    for (int row = 6; row < BOARD_SIZE; ++row) {
+        for (int col = (row % 2); col < BOARD_SIZE; col += 2) {
             grid[row][col] = new Piece(player2, {row, col});
         }
     }
@@ -45,74 +68,83 @@ void GameModel::setCurrentPlayer(const std::string& player) {
 }
 
 void GameModel::initializeFromGrid(const std::vector<std::vector<Piece*>>& initialGrid) {
-    // Clear existing pieces
-    for (auto& row : grid) {
-        for (auto& piece : row) {
-            delete piece;
-            piece = nullptr;
-        }
-    }
+    clearGrid();
     
-    // Copy the grid
-    for (int i = 0; i < 8; ++i) {
-        for (int j = 0; j < 8; ++j) {
+    // Collect unique player names from the grid
+    std::set<std::string> uniquePlayers;
+    
+    // Copy the grid and collect players
+    for (int i = 0; i < BOARD_SIZE; ++i) {
+        for (int j = 0; j < BOARD_SIZE; ++j) {
             if (initialGrid[i][j]) {
                 grid[i][j] = new Piece(*initialGrid[i][j]);
+                uniquePlayers.insert(grid[i][j]->getColor());
             }
         }
     }
     
-    // Default to Player1's turn
-    currentPlayer = "Player1";
+    // Convert to sorted vector for consistent ordering
+    std::vector<std::string> playerList(uniquePlayers.begin(), uniquePlayers.end());
+    std::sort(playerList.begin(), playerList.end());
+    
+    // Assign player names - prioritize common test names
+    if (playerList.size() >= 1) {
+        // If we have Player1 in the list, make it player1Name
+        auto player1Iter = std::find(playerList.begin(), playerList.end(), "Player1");
+        if (player1Iter != playerList.end()) {
+            player1Name = "Player1";
+            playerList.erase(player1Iter);
+        } else {
+            player1Name = playerList[0];
+            playerList.erase(playerList.begin());
+        }
+    }
+    
+    if (playerList.size() >= 1) {
+        // If we have Player2 in the list, make it player2Name
+        auto player2Iter = std::find(playerList.begin(), playerList.end(), "Player2");
+        if (player2Iter != playerList.end()) {
+            player2Name = "Player2";
+        } else if (!playerList.empty()) {
+            player2Name = playerList[0];
+        }
+    }
+    
+    // Set current player to player1Name, or first player found
+    currentPlayer = !player1Name.empty() ? player1Name : "DefaultPlayer";
+}
+
+bool GameModel::canAnyPieceCapture() const {
+    for (int i = 0; i < BOARD_SIZE; ++i) {
+        for (int j = 0; j < BOARD_SIZE; ++j) {
+            if (grid[i][j] && grid[i][j]->getColor() == currentPlayer) {
+                std::vector<Move> captures = grid[i][j]->isDame() 
+                    ? generateDameCaptureMoves({i, j})
+                    : generateCaptureMoves({i, j});
+                if (!captures.empty()) return true;
+            }
+        }
+    }
+    return false;
 }
 
 std::vector<Move> GameModel::getValidMoves(const Position& piecePos) const {
-    if (piecePos.x < 0 || piecePos.x >= 8 || piecePos.y < 0 || piecePos.y >= 8) {
-        return {};
-    }
+    if (!isValidPosition(piecePos)) return {};
     
     Piece* piece = grid[piecePos.x][piecePos.y];
-    if (!piece || piece->getColor() != currentPlayer) {
-        return {};
+    if (!piece || piece->getColor() != currentPlayer) return {};
+    
+    // Mandatory capture rule: if any piece can capture, only return captures
+    if (canAnyPieceCapture()) {
+        return piece->isDame() 
+            ? generateDameCaptureMoves(piecePos)
+            : generateCaptureMoves(piecePos);
     }
     
-    std::vector<Move> moves;
-    
-    // Check if ANY piece can capture (mandatory capture rule)
-    bool anyPieceCanCapture = false;
-    for (int i = 0; i < 8; ++i) {
-        for (int j = 0; j < 8; ++j) {
-            if (grid[i][j] && grid[i][j]->getColor() == currentPlayer) {
-                std::vector<Move> captures;
-                if (grid[i][j]->isDame()) {
-                    captures = generateDameCaptureMoves({i, j});
-                } else {
-                    captures = generateCaptureMoves({i, j});
-                }
-                if (!captures.empty()) {
-                    anyPieceCanCapture = true;
-                    break;
-                }
-            }
-        }
-        if (anyPieceCanCapture) break;
-    }
-    
-    // If any piece can capture, only return capture moves for this piece
-    if (anyPieceCanCapture) {
-        if (piece->isDame()) {
-            return generateDameCaptureMoves(piecePos);
-        } else {
-            return generateCaptureMoves(piecePos);
-        }
-    }
-    
-    // If no captures available, return simple moves
-    if (piece->isDame()) {
-        return generateDameSimpleMoves(piecePos);
-    } else {
-        return generateSimpleMoves(piecePos);
-    }
+    // No captures available, return simple moves
+    return piece->isDame() 
+        ? generateDameSimpleMoves(piecePos)
+        : generateSimpleMoves(piecePos);
 }
 
 std::vector<Move> GameModel::generateSimpleMoves(const Position& from) const {
@@ -120,21 +152,13 @@ std::vector<Move> GameModel::generateSimpleMoves(const Position& from) const {
     Piece* piece = grid[from.x][from.y];
     if (!piece) return moves;
     
-    // Determine move direction based on player
-    int direction = (piece->getColor() == "Player1" || piece->getColor() == "P1") ? 1 : -1;
+    int direction = isPlayer1(piece->getColor()) ? 1 : -1;
     
     // Check diagonal moves
-    std::vector<Position> destinations = {
-        {from.x + direction, from.y - 1},
-        {from.x + direction, from.y + 1}
-    };
-    
-    for (const auto& dest : destinations) {
-        if (dest.x >= 0 && dest.x < 8 && dest.y >= 0 && dest.y < 8 && !grid[dest.x][dest.y]) {
-            Move move;
-            move.from = from;
-            move.path = {dest};
-            move.player = piece->getColor();
+    for (int dy : {-1, 1}) {
+        Position dest{from.x + direction, from.y + dy};
+        if (isValidPosition(dest) && !grid[dest.x][dest.y]) {
+            Move move{from, {dest}, {}, piece->getColor()};
             moves.push_back(move);
         }
     }
@@ -147,25 +171,13 @@ std::vector<Move> GameModel::generateDameSimpleMoves(const Position& from) const
     Piece* piece = grid[from.x][from.y];
     if (!piece || !piece->isDame()) return moves;
     
-    // Check all 4 diagonal directions
-    std::vector<std::pair<int, int>> directions = {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
-    
-    for (const auto& [dx, dy] : directions) {
-        // Slide along diagonal until blocked
-        for (int dist = 1; dist < 8; ++dist) {
+    for (const auto& [dx, dy] : DIAGONAL_DIRECTIONS) {
+        for (int dist = 1; dist < BOARD_SIZE; ++dist) {
             Position dest{from.x + dist * dx, from.y + dist * dy};
             
-            // Check bounds
-            if (dest.x < 0 || dest.x >= 8 || dest.y < 0 || dest.y >= 8) break;
+            if (!isValidPosition(dest) || grid[dest.x][dest.y]) break;
             
-            // If square is occupied, stop sliding in this direction
-            if (grid[dest.x][dest.y]) break;
-            
-            // Add this as a valid move
-            Move move;
-            move.from = from;
-            move.path = {dest};
-            move.player = piece->getColor();
+            Move move{from, {dest}, {}, piece->getColor()};
             moves.push_back(move);
         }
     }
@@ -192,46 +204,28 @@ void GameModel::generateCaptureSequences(const Position& from, const Position& c
     
     bool foundCapture = false;
     
-    // Check all four diagonal directions
-    std::vector<std::pair<int, int>> directions = {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
-    
-    for (const auto& [dx, dy] : directions) {
+    for (const auto& [dx, dy] : DIAGONAL_DIRECTIONS) {
         Position enemy{current.x + dx, current.y + dy};
         Position landing{current.x + 2*dx, current.y + 2*dy};
         
-        // Check bounds
-        if (landing.x < 0 || landing.x >= 8 || landing.y < 0 || landing.y >= 8) continue;
-        
-        // Check if there's an enemy piece to capture
+        if (!isValidPosition(landing)) continue;
         if (!grid[enemy.x][enemy.y] || grid[enemy.x][enemy.y]->getColor() == piece->getColor()) continue;
-        
-        // Check if landing position is empty
         if (grid[landing.x][landing.y]) continue;
-        
-        // Check if we haven't already captured this piece
         if (std::find(captured.begin(), captured.end(), enemy) != captured.end()) continue;
         
         foundCapture = true;
         
-        // Add this capture to the path
         path.push_back(landing);
         captured.push_back(enemy);
         
-        // Continue searching for more captures
         generateCaptureSequences(from, landing, path, captured, allMoves);
         
-        // Backtrack
         path.pop_back();
         captured.pop_back();
     }
     
-    // If no more captures found and we've captured at least one piece, save this move
     if (!foundCapture && !captured.empty()) {
-        Move move;
-        move.from = from;
-        move.path = path;
-        move.captured = captured;
-        move.player = piece->getColor();
+        Move move{from, path, captured, piece->getColor()};
         allMoves.push_back(move);
     }
 }
@@ -241,7 +235,6 @@ std::vector<Move> GameModel::generateDameCaptureMoves(const Position& from) cons
     std::vector<Position> path;
     std::vector<Position> captured;
     
-    // Start capture sequence without initial direction constraint
     generateDameCaptureSequences(from, from, path, captured, allMoves, 0, 0);
     
     return allMoves;
@@ -257,60 +250,40 @@ void GameModel::generateDameCaptureSequences(const Position& from, const Positio
     
     bool foundCapture = false;
     
-    // Try all 4 directions for dame captures
-    std::vector<std::pair<int, int>> directions = {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
-    
-    for (const auto& [dx, dy] : directions) {
-        // Slide along diagonal looking for enemy pieces
-        for (int dist = 1; dist < 8; ++dist) {
+    for (const auto& [dx, dy] : DIAGONAL_DIRECTIONS) {
+        for (int dist = 1; dist < BOARD_SIZE; ++dist) {
             Position checkPos{current.x + dist * dx, current.y + dist * dy};
             
-            // Check bounds
-            if (checkPos.x < 0 || checkPos.x >= 8 || checkPos.y < 0 || checkPos.y >= 8) break;
+            if (!isValidPosition(checkPos)) break;
             
-            // If we find an enemy piece
+            // Found enemy piece
             if (grid[checkPos.x][checkPos.y] && grid[checkPos.x][checkPos.y]->getColor() != piece->getColor()) {
-                // Check if already captured
                 if (std::find(captured.begin(), captured.end(), checkPos) != captured.end()) break;
                 
-                // Check the first empty square after the enemy piece
                 Position landing{current.x + (dist + 1) * dx, current.y + (dist + 1) * dy};
                 
-                // Check bounds
-                if (landing.x < 0 || landing.x >= 8 || landing.y < 0 || landing.y >= 8) break;
+                if (!isValidPosition(landing)) break;
                 
-                // If the first square after enemy is empty, this is a valid capture
                 if (!grid[landing.x][landing.y]) {
                     foundCapture = true;
                     
-                    // Add this capture to the path
                     path.push_back(landing);
                     captured.push_back(checkPos);
                     
-                    // Try to continue capturing from this landing position
                     generateDameCaptureSequences(from, landing, path, captured, allMoves, 0, 0);
                     
-                    // Backtrack
                     path.pop_back();
                     captured.pop_back();
                 }
-                
-                // Once we find an enemy piece, don't check further in this direction
                 break;
             }
             
-            // If we find our own piece, stop
             if (grid[checkPos.x][checkPos.y]) break;
         }
     }
     
-    // If no more captures found and we've captured at least one piece, save this move
     if (!foundCapture && !captured.empty()) {
-        Move move;
-        move.from = from;
-        move.path = path;
-        move.captured = captured;
-        move.player = piece->getColor();
+        Move move{from, path, captured, piece->getColor()};
         allMoves.push_back(move);
     }
 }
@@ -318,20 +291,15 @@ void GameModel::generateDameCaptureSequences(const Position& from, const Positio
 std::map<Position, std::vector<Move>> GameModel::getAllValidMoves() const {
     std::map<Position, std::vector<Move>> allMoves;
     
-    // First check if any piece can capture
+    // Check if any piece can capture
     bool hasCaptures = false;
-    for (int i = 0; i < 8; ++i) {
-        for (int j = 0; j < 8; ++j) {
+    for (int i = 0; i < BOARD_SIZE; ++i) {
+        for (int j = 0; j < BOARD_SIZE; ++j) {
             if (grid[i][j] && grid[i][j]->getColor() == currentPlayer) {
                 Position pos{i, j};
-                std::vector<Move> captures;
-                
-                // Check if it's a dame or regular piece
-                if (grid[i][j]->isDame()) {
-                    captures = generateDameCaptureMoves(pos);
-                } else {
-                    captures = generateCaptureMoves(pos);
-                }
+                std::vector<Move> captures = grid[i][j]->isDame() 
+                    ? generateDameCaptureMoves(pos)
+                    : generateCaptureMoves(pos);
                 
                 if (!captures.empty()) {
                     hasCaptures = true;
@@ -341,24 +309,16 @@ std::map<Position, std::vector<Move>> GameModel::getAllValidMoves() const {
         }
     }
     
-    // If captures exist, only return capture moves (mandatory in checkers)
-    if (hasCaptures) {
-        return allMoves;
-    }
+    if (hasCaptures) return allMoves;
     
-    // Otherwise, return all simple moves
-    for (int i = 0; i < 8; ++i) {
-        for (int j = 0; j < 8; ++j) {
+    // No captures, return simple moves
+    for (int i = 0; i < BOARD_SIZE; ++i) {
+        for (int j = 0; j < BOARD_SIZE; ++j) {
             if (grid[i][j] && grid[i][j]->getColor() == currentPlayer) {
                 Position pos{i, j};
-                std::vector<Move> moves;
-                
-                // Check if it's a dame or regular piece
-                if (grid[i][j]->isDame()) {
-                    moves = generateDameSimpleMoves(pos);
-                } else {
-                    moves = generateSimpleMoves(pos);
-                }
+                std::vector<Move> moves = grid[i][j]->isDame() 
+                    ? generateDameSimpleMoves(pos)
+                    : generateSimpleMoves(pos);
                 
                 if (!moves.empty()) {
                     allMoves[pos] = moves;
@@ -371,17 +331,15 @@ std::map<Position, std::vector<Move>> GameModel::getAllValidMoves() const {
 }
 
 void GameModel::executeMove(const Move& move) {
-    // Move the piece
     Piece* piece = grid[move.from.x][move.from.y];
     if (!piece) return;
     
-    // Update piece position
+    // Move piece to final position
     Position finalPos = move.path.back();
     grid[finalPos.x][finalPos.y] = piece;
     grid[move.from.x][move.from.y] = nullptr;
     piece->setPosition(finalPos);
     
-    // Check for promotion
     checkPromotion(finalPos);
     
     // Remove captured pieces
@@ -390,24 +348,18 @@ void GameModel::executeMove(const Move& move) {
         grid[capturedPos.x][capturedPos.y] = nullptr;
     }
     
-    // Add to history
     moveHistory.push_back(move);
     
     // Switch turns
-    currentPlayer = (currentPlayer == "Player1" || currentPlayer == "P1") ? "Player2" : "Player1";
-    if (currentPlayer == "P2") currentPlayer = "P1"; // Handle P1/P2 naming
+    currentPlayer = getOpponent(currentPlayer);
 }
 
 void GameModel::checkPromotion(const Position& pos) {
     Piece* piece = grid[pos.x][pos.y];
     if (!piece || piece->isDame()) return;
     
-    // Check if piece reached opponent's back row
-    if ((piece->getColor() == "Player1" || piece->getColor() == "P1") && pos.x == 7) {
-        piece->promote();
-    } else if ((piece->getColor() == "Player2" || piece->getColor() == "P2") && pos.x == 0) {
-        piece->promote();
-    }
+    bool shouldPromote = isPlayer1(piece->getColor()) ? (pos.x == 7) : (pos.x == 0);
+    if (shouldPromote) piece->promote();
 }
 
 bool GameModel::isGameOver() const {
@@ -416,18 +368,14 @@ bool GameModel::isGameOver() const {
 
 std::string GameModel::getWinner() const {
     if (!isGameOver()) return "";
-    
-    // If current player has no moves, the other player wins
-    return (currentPlayer == "Player1" || currentPlayer == "P1") ? "Player2" : "Player1";
+    return getOpponent(currentPlayer);
 }
 
 int GameModel::getPieceCount(const std::string& player) const {
     int count = 0;
     for (const auto& row : grid) {
         for (const auto& piece : row) {
-            if (piece && piece->getColor() == player) {
-                count++;
-            }
+            if (piece && piece->getColor() == player) count++;
         }
     }
     return count;
@@ -436,11 +384,13 @@ int GameModel::getPieceCount(const std::string& player) const {
 GameModel* GameModel::clone() const {
     GameModel* copy = new GameModel();
     copy->currentPlayer = currentPlayer;
+    copy->player1Name = player1Name;
+    copy->player2Name = player2Name;
     copy->moveHistory = moveHistory;
     
     // Deep copy the grid
-    for (int i = 0; i < 8; ++i) {
-        for (int j = 0; j < 8; ++j) {
+    for (int i = 0; i < BOARD_SIZE; ++i) {
+        for (int j = 0; j < BOARD_SIZE; ++j) {
             if (grid[i][j]) {
                 copy->grid[i][j] = new Piece(*grid[i][j]);
             }
@@ -448,81 +398,4 @@ GameModel* GameModel::clone() const {
     }
     
     return copy;
-}
-
-void GameModel::undoLastMove() {
-    if (moveHistory.empty()) return;
-    
-    Move lastMove = moveHistory.back();
-    moveHistory.pop_back();
-    
-    // Move piece back
-    Piece* piece = grid[lastMove.path.back().x][lastMove.path.back().y];
-    if (piece) {
-        grid[lastMove.from.x][lastMove.from.y] = piece;
-        grid[lastMove.path.back().x][lastMove.path.back().y] = nullptr;
-        piece->setPosition(lastMove.from);
-        
-        // Restore captured pieces
-        for (const auto& capturedPos : lastMove.captured) {
-            // We need to know the color of captured pieces - this is a limitation
-            // For now, assume opposite of the player who made the move
-            std::string capturedColor = (lastMove.player == "Player1" || lastMove.player == "P1") ? "Player2" : "Player1";
-            grid[capturedPos.x][capturedPos.y] = new Piece(capturedColor, capturedPos);
-        }
-        
-        // Switch back turns
-        currentPlayer = lastMove.player;
-    }
-}
-
-double GameModel::evaluatePosition(const std::string& player) const {
-    double myScore = 0;
-    double oppScore = 0;
-    
-    // Determine opponent
-    std::string opponent = (player == "Player1" || player == "P1") ? "Player2" : "Player1";
-    
-    // Calculate scores for both players
-    for (int i = 0; i < 8; ++i) {
-        for (int j = 0; j < 8; ++j) {
-            if (grid[i][j]) {
-                double pieceValue = 10; // Base piece value
-                
-                // Position bonus
-                double positionBonus = 0;
-                if (grid[i][j]->getColor() == "Player1" || grid[i][j]->getColor() == "P1") {
-                    positionBonus = i * 0.5;
-                } else {
-                    positionBonus = (7 - i) * 0.5;
-                }
-                
-                // Dame bonus
-                if (grid[i][j]->isDame()) {
-                    pieceValue += 5;
-                }
-                
-                double totalPieceValue = pieceValue + positionBonus;
-                
-                if (grid[i][j]->getColor() == player) {
-                    myScore += totalPieceValue;
-                } else {
-                    oppScore += totalPieceValue;
-                }
-            }
-        }
-    }
-    
-    return myScore - oppScore;
-}
-
-std::vector<Move> GameModel::getAllPossibleMoves() const {
-    std::vector<Move> moves;
-    auto movesMap = getAllValidMoves();
-    
-    for (const auto& [pos, posMoves] : movesMap) {
-        moves.insert(moves.end(), posMoves.begin(), posMoves.end());
-    }
-    
-    return moves;
 }

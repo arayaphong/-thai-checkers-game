@@ -63,8 +63,6 @@ void runAnalyticsScenario(const std::string& scenarioName,
         std::cout << "\nGame Statistics:" << std::endl;
         std::cout << "  Player1 pieces: " << model.getPieceCount("Player1") << std::endl;
         std::cout << "  Player2 pieces: " << model.getPieceCount("Player2") << std::endl;
-        std::cout << "  Position evaluation (Player1): " << std::fixed << std::setprecision(2) 
-                  << model.evaluatePosition("Player1") << std::endl;
     }
 }
 

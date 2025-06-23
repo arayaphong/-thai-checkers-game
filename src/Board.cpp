@@ -1,6 +1,8 @@
 #include "Board.h"
 #include <iostream>
 #include <iomanip>
+#include <set>
+#include <algorithm>
 
 Board::Board() : model(nullptr) {}
 
@@ -34,6 +36,20 @@ void Board::display() const {
     
     auto grid = model->getBoard();
     
+    // Get all unique player colors to determine symbols
+    std::set<std::string> playerColors;
+    for (int i = 0; i < 8; ++i) {
+        for (int j = 0; j < 8; ++j) {
+            if (grid[i][j]) {
+                playerColors.insert(grid[i][j]->getColor());
+            }
+        }
+    }
+    
+    // Convert to vector for consistent ordering
+    std::vector<std::string> players(playerColors.begin(), playerColors.end());
+    std::sort(players.begin(), players.end()); // Consistent ordering
+    
     // Print column indices
     std::cout << "  ";
     for (int j = 0; j < 8; ++j) {
@@ -48,10 +64,12 @@ void Board::display() const {
             if (piece) {
                 // Determine symbol based on piece color and type
                 const char* symbol;
+                bool isFirstPlayer = !players.empty() && piece->getColor() == players[0];
+                
                 if (piece->isDame()) {
-                    symbol = (piece->getColor() == "Player1" || piece->getColor() == "P1") ? "♛" : "♕";
+                    symbol = isFirstPlayer ? "♛" : "♕";
                 } else {
-                    symbol = (piece->getColor() == "Player1" || piece->getColor() == "P1") ? "●" : "○";
+                    symbol = isFirstPlayer ? "●" : "○";
                 }
                 std::cout << symbol << " ";
             } else {
@@ -60,38 +78,6 @@ void Board::display() const {
         }
         std::cout << std::endl;
     }
-}
-
-void Board::displayMoveHistory() const {
-    if (!model) return;
-    
-    auto history = model->getMoveHistory();
-    std::cout << "Move History:\n";
-    for (size_t i = 0; i < history.size(); ++i) {
-        const auto& move = history[i];
-        std::cout << i + 1 << ". " << move.player << ": ";
-        std::cout << "(" << move.from.x << "," << move.from.y << ") -> ";
-        for (const auto& pos : move.path) {
-            std::cout << "(" << pos.x << "," << pos.y << ") ";
-        }
-        if (move.isCapture()) {
-            std::cout << "[captured " << move.captureCount() << "]";
-        }
-        std::cout << "\n";
-    }
-}
-
-void Board::displayStatistics() const {
-    if (!model) return;
-    
-    std::cout << "Game Statistics:\n";
-    std::cout << "Current Player: " << model->getCurrentPlayer() << "\n";
-    std::cout << "Piece Count:\n";
-    // This assumes we know the player names
-    // In practice, we'd get these from the model
-    std::cout << "  Player1: " << model->getPieceCount("Player1") << "\n";
-    std::cout << "  Player2: " << model->getPieceCount("Player2") << "\n";
-    std::cout << "Total Moves: " << model->getMoveHistory().size() << "\n";
 }
 
 std::vector<Move> Board::getValidMovesFor(const Position& pos) const {
