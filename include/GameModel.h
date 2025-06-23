@@ -31,6 +31,15 @@ private:
                                   std::vector<Position>& captured,
                                   std::vector<Move>& allMoves) const;
     
+    // Dame-specific move generation
+    std::vector<Move> generateDameSimpleMoves(const Position& from) const;
+    std::vector<Move> generateDameCaptureMoves(const Position& from) const;
+    void generateDameCaptureSequences(const Position& from, const Position& current,
+                                     std::vector<Position>& path,
+                                     std::vector<Position>& captured,
+                                     std::vector<Move>& allMoves,
+                                     int dx, int dy) const;
+    
 public:
     GameModel();
     ~GameModel();
@@ -65,6 +74,9 @@ public:
 
     // Set the current player for custom grids and turn management
     void setCurrentPlayer(const std::string& player);
+
+    // Promotion check
+    void checkPromotion(const Position& pos);
 };
 
 #endif // GAMEMODEL_H

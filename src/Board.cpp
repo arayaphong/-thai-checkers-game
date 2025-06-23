@@ -46,9 +46,13 @@ void Board::display() const {
         std::cout << i << " ";
         for (const auto& piece : grid[i]) {
             if (piece) {
-                // Determine symbol based on piece color
-                // Assuming player1 uses ● and player2 uses ○
-                const char* symbol = (piece->getColor() == "Player1" || piece->getColor() == "P1") ? "●" : "○";
+                // Determine symbol based on piece color and type
+                const char* symbol;
+                if (piece->isDame()) {
+                    symbol = (piece->getColor() == "Player1" || piece->getColor() == "P1") ? "♛" : "♕";
+                } else {
+                    symbol = (piece->getColor() == "Player1" || piece->getColor() == "P1") ? "●" : "○";
+                }
                 std::cout << symbol << " ";
             } else {
                 std::cout << ". ";

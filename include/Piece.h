@@ -10,19 +10,23 @@ public:
     
     Piece();
     Piece(const Piece& piece) = default;
-    Piece(const std::string& color, const Position& position)
-        : color(color), position(position) {}
+    Piece(const std::string& color, const Position& position, Type type = Type::Regular)
+        : color(color), position(position), type(type) {}
     
     const std::string& getColor() const;
     Position getPosition() const;
     void setPosition(const Position& newPosition);
     
+    Type getType() const { return type; }
+    void promote() { type = Type::Dame; }
+    bool isDame() const { return type == Type::Dame; }
+    
     virtual ~Piece() = default;
-    virtual Type getType() const { return Type::Regular; }
 
 private:
     std::string color;
     Position position;
+    Type type;
 };
 
 #endif // PIECE_H
