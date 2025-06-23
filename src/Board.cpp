@@ -1,4 +1,5 @@
 #include "Board.h"
+#include "States.h"
 #include <algorithm>  // for remove_if
 #include <iostream>
 #include <vector>

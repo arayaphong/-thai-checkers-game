@@ -12,6 +12,7 @@ include_directories(include)
 set(LIB_SOURCES
     src/Board.cpp
     src/Piece.cpp
+    src/States.cpp
 )
 
 # Create a library from the source files

@@ -5,8 +5,7 @@
 #include <string>
 #include <memory>
 #include "Piece.h"
-
-class States;  // forward
+#include "States.h"
 
 class Board {
 public:
@@ -30,21 +29,6 @@ private:
     std::string player2Name;
     std::string currentPlayer;
     States* currentStates = nullptr;  // pointer to last States
-};
-
-// State container for move paths and board updates
-class States {
-public:
-    // Apply chosen path back to the board
-    void selectMove(const std::vector<Position>& path);
-    const std::vector<std::vector<Position>>& getChoices() const { return choices; }
-
-private:
-    friend class Board;
-    Board* board = nullptr;
-    const Piece* piece = nullptr;
-    std::vector<std::vector<Position>> choices;
-    bool hasCapture = false;
 };
 
 #endif // BOARD_H

@@ -1,6 +1,7 @@
 #include <iostream>
 #include "Board.h"
 #include "Piece.h"
+#include "States.h"
 
 int main() {
     // Scenario: Simple Move with States API

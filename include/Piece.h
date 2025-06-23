@@ -14,7 +14,7 @@ struct Position {
 
 class Piece {
 public:
-    enum class Type { Regular, King };    // added type enum
+    enum class Type { Regular, Dame };    // added type enum
     Piece();
     Piece(const Piece& piece) = default;  // copy constructor
     Piece(const std::string& color, Position position)
