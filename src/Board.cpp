@@ -93,7 +93,7 @@ void Board::display() const {
         std::cout << i << " ";
         for (const auto& piece : grid[i]) {
             if (piece) {
-                char symbol = (piece->getColor() == player1Name) ? 'X' : 'O';
+                const char* symbol = (piece->getColor() == player1Name) ? "●" : "○";
                 std::cout << symbol << " ";
             } else {
                 std::cout << ". ";
