@@ -500,6 +500,126 @@ void demonstrateDameUnlimitedMovement() {
     }
 }
 
+void demonstrateSwitchingTurnMove() {
+    std::cout << "\n=== Switching Turn Move Demonstration ===" << std::endl;
+    std::cout << "Scenario: Demonstrating how turns alternate between players after each move" << std::endl;
+    
+    std::vector<std::vector<Piece*>> grid(8, std::vector<Piece*>(8, nullptr));
+    
+    // Set up a simple scenario with pieces from both players
+    grid[2][2] = new Piece("Player1", {2, 2});
+    grid[2][4] = new Piece("Player1", {2, 4});
+    grid[5][3] = new Piece("Player2", {5, 3});
+    grid[5][5] = new Piece("Player2", {5, 5});
+    
+    // Create game model and board
+    GameModel model;
+    model.initializeFromGrid(grid);
+    Board board;
+    board.setModel(&model);
+    
+    std::cout << "\nInitial board setup:" << std::endl;
+    std::cout << "Player1 pieces at (2,2) and (2,4)" << std::endl;
+    std::cout << "Player2 pieces at (5,3) and (5,5)" << std::endl;
+    board.display();
+    
+    std::cout << "\nTurn Management Rules:" << std::endl;
+    std::cout << "1. Game starts with Player1's turn" << std::endl;
+    std::cout << "2. After each move execution, turn switches to the other player" << std::endl;
+    std::cout << "3. Players cannot move opponent's pieces" << std::endl;
+    std::cout << "4. Players can only see and execute moves for their own pieces" << std::endl;
+    
+    // Demonstrate several turns
+    for (int turn = 1; turn <= 4; ++turn) {
+        std::cout << "\n--- Turn " << turn << " ---" << std::endl;
+        std::cout << "Current Player: " << model.getCurrentPlayer() << std::endl;
+        
+        // Get all valid moves for current player
+        auto allMoves = model.getAllValidMoves();
+        
+        if (allMoves.empty()) {
+            std::cout << "No valid moves available for " << model.getCurrentPlayer() << std::endl;
+            break;
+        }
+        
+        std::cout << "Available pieces that can move:" << std::endl;
+        for (const auto& [pos, moves] : allMoves) {
+            std::cout << "  Piece at (" << pos.x << "," << pos.y << ") - " 
+                      << moves.size() << " possible moves" << std::endl;
+        }
+        
+        // Execute the first available move
+        auto firstPiecePos = allMoves.begin()->first;
+        auto firstMove = allMoves.begin()->second[0];
+        
+        std::cout << "\nExecuting move:" << std::endl;
+        std::cout << "  " << model.getCurrentPlayer() << " moves piece from (" 
+                  << firstMove.from.x << "," << firstMove.from.y << ") to (";
+        
+        if (!firstMove.path.empty()) {
+            auto target = firstMove.path.back();
+            std::cout << target.x << "," << target.y << ")";
+            
+            if (firstMove.isCapture()) {
+                std::cout << " [captures " << firstMove.captureCount() << " pieces]";
+            }
+        }
+        std::cout << std::endl;
+        
+        // Store current player before move execution for comparison
+        std::string playerBeforeMove = model.getCurrentPlayer();
+        
+        // Execute the move
+        model.executeMove(firstMove);
+        
+        std::cout << "\nAfter move execution:" << std::endl;
+        std::cout << "  Previous player: " << playerBeforeMove << std::endl;
+        std::cout << "  Current player: " << model.getCurrentPlayer() << std::endl;
+        std::cout << "  Turn successfully switched: " 
+                  << (playerBeforeMove != model.getCurrentPlayer() ? "YES" : "NO") << std::endl;
+        
+        board.display();
+        
+        // Show piece counts
+        std::cout << "Current game state:" << std::endl;
+        std::cout << "  Player1 pieces: " << model.getPieceCount("Player1") << std::endl;
+        std::cout << "  Player2 pieces: " << model.getPieceCount("Player2") << std::endl;
+    }
+    
+    std::cout << "\nMove History Summary:" << std::endl;
+    auto moveHistory = model.getMoveHistory();
+    for (size_t i = 0; i < moveHistory.size(); ++i) {
+        const auto& move = moveHistory[i];
+        std::string player = (i % 2 == 0) ? "Player1" : "Player2";
+        std::cout << "  Move " << (i + 1) << " (" << player << "): (" 
+                  << move.from.x << "," << move.from.y << ") -> ";
+        
+        if (!move.path.empty()) {
+            auto target = move.path.back();
+            std::cout << "(" << target.x << "," << target.y << ")";
+            if (move.isCapture()) {
+                std::cout << " [captured " << move.captureCount() << " pieces]";
+            }
+        }
+        std::cout << std::endl;
+    }
+    
+    std::cout << "\nDemonstration completed successfully!" << std::endl;
+    std::cout << "Key observations:" << std::endl;
+    std::cout << "- Each player can only move their own pieces" << std::endl;
+    std::cout << "- Turn automatically switches after each valid move" << std::endl;
+    std::cout << "- Game maintains proper turn order throughout play" << std::endl;
+    std::cout << "- Move history tracks the sequence of all executed moves" << std::endl;
+    
+    // Clean up memory
+    for (auto& row : grid) {
+        for (auto& piece : row) {
+            delete piece;
+            piece = nullptr;
+        }
+    }
+}
+
 int main(int argc, char* argv[]) {
     std::cout << "Thai Checkers Analytics System" << std::endl;
     std::cout << "==============================" << std::endl;
@@ -534,8 +654,10 @@ int main(int argc, char* argv[]) {
         demonstrateDameMultipleCaptures();
     } else if (pieceType == "dame" && scenario == "mandatory-capture") {
         demonstrateDameMandatoryCapture();
+    } else if (scenario == "switching-turns") {
+        demonstrateSwitchingTurnMove();
     } else {
-        std::cout << "\nUsage: " << argv[0] << " --piece-type <regular|dame> --scenario <move|capture|promotion|unlimited-movement|multiple-capture|mandatory-capture>" << std::endl;
+        std::cout << "\nUsage: " << argv[0] << " --piece-type <regular|dame> --scenario <move|capture|promotion|unlimited-movement|multiple-capture|mandatory-capture|switching-turns>" << std::endl;
         std::cout << "Running all demonstrations by default:" << std::endl;
         demonstrateRegularPieceMove();
         demonstrateRegularPieceCapture();
@@ -545,6 +667,7 @@ int main(int argc, char* argv[]) {
         demonstrateDameUnlimitedMovement();
         demonstrateDameMultipleCaptures();
         demonstrateDameMandatoryCapture();
+        demonstrateSwitchingTurnMove();
     }
 
     return 0;
