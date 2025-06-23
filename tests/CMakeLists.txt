@@ -6,6 +6,7 @@ set(TEST_SOURCES
     PieceTests.cpp
     BoardDisplayTests.cpp
     GameModelTests.cpp
+    GameScenarioTests.cpp
     # Removed StatesTest.cpp - States class no longer exists
 )
 
@@ -26,4 +27,5 @@ add_test(NAME BoardTests COMMAND ThaiCheckersTests)
 add_test(NAME PieceTests COMMAND ThaiCheckersTests)
 add_test(NAME BoardDisplayTests COMMAND ThaiCheckersTests)
 add_test(NAME GameModelTests COMMAND ThaiCheckersTests)
+add_test(NAME GameScenarioTests COMMAND ThaiCheckersTests)
 # Removed StatesTest

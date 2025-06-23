@@ -6,16 +6,7 @@
 #include <string>
 #include <map>
 #include "Piece.h"
-
-struct Move {
-    Position from;
-    std::vector<Position> path;
-    std::vector<Position> captured;
-    std::string player;
-    
-    bool isCapture() const { return !captured.empty(); }
-    int captureCount() const { return captured.size(); }
-};
+#include "Move.h"  // Include the Move header
 
 class GameModel {
 private:

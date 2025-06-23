@@ -162,11 +162,18 @@ TEST_F(GameModelTests, DamePromotion) {
     
     // Check piece is promoted
     auto board = model.getBoard();
-    // Check both possible landing positions
-    bool foundPromoted = false;
-    if (board[7][5] && board[7][5]->isDame()) foundPromoted = true;
-    if (board[7][7] && board[7][7]->isDame()) foundPromoted = true;
-    EXPECT_TRUE(foundPromoted);
+    // Check the actual landing position
+    Piece* promotedPiece = nullptr;
+    Position promotedPos;
+    for (int y = 0; y < 8; ++y) {
+        if (board[7][y] && board[7][y]->getColor() == "Player1") {
+            promotedPiece = board[7][y];
+            promotedPos = {7, y};
+            break;
+        }
+    }
+    ASSERT_NE(promotedPiece, nullptr);
+    EXPECT_TRUE(promotedPiece->isDame());
 }
 
 TEST_F(GameModelTests, DameSimpleMove) {
@@ -219,12 +226,17 @@ TEST_F(GameModelTests, DameFlexibleLanding) {
     
     auto moves = model.getValidMoves({7, 7});
     
-    // Dame should have multiple landing options after capture
-    int landingOptions = 0;
+    // Dame should only land on (4,4) - the first empty square after (5,5)
+    int captureMovesCount = 0;
+    bool foundCorrectLanding = false;
     for (const auto& move : moves) {
         if (move.isCapture() && move.captureCount() == 1) {
-            landingOptions++;
+            captureMovesCount++;
+            if (move.path[0].x == 4 && move.path[0].y == 4) {
+                foundCorrectLanding = true;
+            }
         }
     }
-    EXPECT_GE(landingOptions, 1); // At least one landing option after capture
+    EXPECT_EQ(captureMovesCount, 1); // Only one capture move should exist
+    EXPECT_TRUE(foundCorrectLanding); // And it must land on (4,4)
 }

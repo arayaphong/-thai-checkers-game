@@ -78,16 +78,33 @@ std::vector<Move> GameModel::getValidMoves(const Position& piecePos) const {
     
     std::vector<Move> moves;
     
-    // Check for capture moves first (mandatory in checkers)
-    std::vector<Move> captureMoves;
-    if (piece->isDame()) {
-        captureMoves = generateDameCaptureMoves(piecePos);
-    } else {
-        captureMoves = generateCaptureMoves(piecePos);
+    // Check if ANY piece can capture (mandatory capture rule)
+    bool anyPieceCanCapture = false;
+    for (int i = 0; i < 8; ++i) {
+        for (int j = 0; j < 8; ++j) {
+            if (grid[i][j] && grid[i][j]->getColor() == currentPlayer) {
+                std::vector<Move> captures;
+                if (grid[i][j]->isDame()) {
+                    captures = generateDameCaptureMoves({i, j});
+                } else {
+                    captures = generateCaptureMoves({i, j});
+                }
+                if (!captures.empty()) {
+                    anyPieceCanCapture = true;
+                    break;
+                }
+            }
+        }
+        if (anyPieceCanCapture) break;
     }
     
-    if (!captureMoves.empty()) {
-        return captureMoves;
+    // If any piece can capture, only return capture moves for this piece
+    if (anyPieceCanCapture) {
+        if (piece->isDame()) {
+            return generateDameCaptureMoves(piecePos);
+        } else {
+            return generateCaptureMoves(piecePos);
+        }
     }
     
     // If no captures available, return simple moves
@@ -166,21 +183,6 @@ std::vector<Move> GameModel::generateCaptureMoves(const Position& from) const {
     return allMoves;
 }
 
-std::vector<Move> GameModel::generateDameCaptureMoves(const Position& from) const {
-    std::vector<Move> allMoves;
-    std::vector<Position> path;
-    std::vector<Position> captured;
-    
-    // Try captures in all 4 directions
-    std::vector<std::pair<int, int>> directions = {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
-    
-    for (const auto& [dx, dy] : directions) {
-        generateDameCaptureSequences(from, from, path, captured, allMoves, dx, dy);
-    }
-    
-    return allMoves;
-}
-
 void GameModel::generateCaptureSequences(const Position& from, const Position& current,
                                        std::vector<Position>& path,
                                        std::vector<Position>& captured,
@@ -234,6 +236,17 @@ void GameModel::generateCaptureSequences(const Position& from, const Position& c
     }
 }
 
+std::vector<Move> GameModel::generateDameCaptureMoves(const Position& from) const {
+    std::vector<Move> allMoves;
+    std::vector<Position> path;
+    std::vector<Position> captured;
+    
+    // Start capture sequence without initial direction constraint
+    generateDameCaptureSequences(from, from, path, captured, allMoves, 0, 0);
+    
+    return allMoves;
+}
+
 void GameModel::generateDameCaptureSequences(const Position& from, const Position& current,
                                            std::vector<Position>& path,
                                            std::vector<Position>& captured,
@@ -244,52 +257,51 @@ void GameModel::generateDameCaptureSequences(const Position& from, const Positio
     
     bool foundCapture = false;
     
-    // Continue in the same diagonal direction
-    for (int dist = 1; dist < 8; ++dist) {
-        Position checkPos{current.x + dist * initialDx, current.y + dist * initialDy};
-        
-        // Check bounds
-        if (checkPos.x < 0 || checkPos.x >= 8 || checkPos.y < 0 || checkPos.y >= 8) break;
-        
-        // If we find an enemy piece
-        if (grid[checkPos.x][checkPos.y] && grid[checkPos.x][checkPos.y]->getColor() != piece->getColor()) {
-            // Check if already captured
-            if (std::find(captured.begin(), captured.end(), checkPos) != captured.end()) break;
+    // Try all 4 directions for dame captures
+    std::vector<std::pair<int, int>> directions = {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
+    
+    for (const auto& [dx, dy] : directions) {
+        // Slide along diagonal looking for enemy pieces
+        for (int dist = 1; dist < 8; ++dist) {
+            Position checkPos{current.x + dist * dx, current.y + dist * dy};
             
-            // Look for empty squares beyond the enemy piece
-            for (int landDist = dist + 1; landDist < 8; ++landDist) {
-                Position landing{current.x + landDist * initialDx, current.y + landDist * initialDy};
+            // Check bounds
+            if (checkPos.x < 0 || checkPos.x >= 8 || checkPos.y < 0 || checkPos.y >= 8) break;
+            
+            // If we find an enemy piece
+            if (grid[checkPos.x][checkPos.y] && grid[checkPos.x][checkPos.y]->getColor() != piece->getColor()) {
+                // Check if already captured
+                if (std::find(captured.begin(), captured.end(), checkPos) != captured.end()) break;
+                
+                // Check the first empty square after the enemy piece
+                Position landing{current.x + (dist + 1) * dx, current.y + (dist + 1) * dy};
                 
                 // Check bounds
                 if (landing.x < 0 || landing.x >= 8 || landing.y < 0 || landing.y >= 8) break;
                 
-                // If occupied, no more landing spots in this direction
-                if (grid[landing.x][landing.y]) break;
-                
-                foundCapture = true;
-                
-                // Add this capture to the path
-                path.push_back(landing);
-                captured.push_back(checkPos);
-                
-                // Try to continue capturing from this landing position
-                // Dame can change direction after each capture
-                std::vector<std::pair<int, int>> newDirections = {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
-                for (const auto& [newDx, newDy] : newDirections) {
-                    generateDameCaptureSequences(from, landing, path, captured, allMoves, newDx, newDy);
+                // If the first square after enemy is empty, this is a valid capture
+                if (!grid[landing.x][landing.y]) {
+                    foundCapture = true;
+                    
+                    // Add this capture to the path
+                    path.push_back(landing);
+                    captured.push_back(checkPos);
+                    
+                    // Try to continue capturing from this landing position
+                    generateDameCaptureSequences(from, landing, path, captured, allMoves, 0, 0);
+                    
+                    // Backtrack
+                    path.pop_back();
+                    captured.pop_back();
                 }
                 
-                // Backtrack
-                path.pop_back();
-                captured.pop_back();
+                // Once we find an enemy piece, don't check further in this direction
+                break;
             }
             
-            // Once we find an enemy piece, don't check further in this direction
-            break;
+            // If we find our own piece, stop
+            if (grid[checkPos.x][checkPos.y]) break;
         }
-        
-        // If we find our own piece, stop
-        if (grid[checkPos.x][checkPos.y]) break;
     }
     
     // If no more captures found and we've captured at least one piece, save this move
@@ -312,7 +324,15 @@ std::map<Position, std::vector<Move>> GameModel::getAllValidMoves() const {
         for (int j = 0; j < 8; ++j) {
             if (grid[i][j] && grid[i][j]->getColor() == currentPlayer) {
                 Position pos{i, j};
-                auto captures = generateCaptureMoves(pos);
+                std::vector<Move> captures;
+                
+                // Check if it's a dame or regular piece
+                if (grid[i][j]->isDame()) {
+                    captures = generateDameCaptureMoves(pos);
+                } else {
+                    captures = generateCaptureMoves(pos);
+                }
+                
                 if (!captures.empty()) {
                     hasCaptures = true;
                     allMoves[pos] = captures;
@@ -331,7 +351,15 @@ std::map<Position, std::vector<Move>> GameModel::getAllValidMoves() const {
         for (int j = 0; j < 8; ++j) {
             if (grid[i][j] && grid[i][j]->getColor() == currentPlayer) {
                 Position pos{i, j};
-                auto moves = generateSimpleMoves(pos);
+                std::vector<Move> moves;
+                
+                // Check if it's a dame or regular piece
+                if (grid[i][j]->isDame()) {
+                    moves = generateDameSimpleMoves(pos);
+                } else {
+                    moves = generateSimpleMoves(pos);
+                }
+                
                 if (!moves.empty()) {
                     allMoves[pos] = moves;
                 }
@@ -449,35 +477,43 @@ void GameModel::undoLastMove() {
 }
 
 double GameModel::evaluatePosition(const std::string& player) const {
-    // Simple evaluation function for analytics
-    double score = 0.0;
+    double myScore = 0;
+    double oppScore = 0;
     
-    // Count pieces
-    int myPieces = getPieceCount(player);
+    // Determine opponent
     std::string opponent = (player == "Player1" || player == "P1") ? "Player2" : "Player1";
-    int oppPieces = getPieceCount(opponent);
     
-    score += (myPieces - oppPieces) * 10.0;
-    
-    // Add positional bonuses
+    // Calculate scores for both players
     for (int i = 0; i < 8; ++i) {
         for (int j = 0; j < 8; ++j) {
-            if (grid[i][j] && grid[i][j]->getColor() == player) {
-                // Prefer advanced positions
-                if (player == "Player1" || player == "P1") {
-                    score += i * 0.5;
+            if (grid[i][j]) {
+                double pieceValue = 10; // Base piece value
+                
+                // Position bonus
+                double positionBonus = 0;
+                if (grid[i][j]->getColor() == "Player1" || grid[i][j]->getColor() == "P1") {
+                    positionBonus = i * 0.5;
                 } else {
-                    score += (7 - i) * 0.5;
+                    positionBonus = (7 - i) * 0.5;
+                }
+                
+                // Dame bonus
+                if (grid[i][j]->isDame()) {
+                    pieceValue += 5;
+                }
+                
+                double totalPieceValue = pieceValue + positionBonus;
+                
+                if (grid[i][j]->getColor() == player) {
+                    myScore += totalPieceValue;
+                } else {
+                    oppScore += totalPieceValue;
                 }
             }
         }
     }
     
-    // Invert score for Player2 to ensure symmetry
-    if (player == "Player2" || player == "P2") {
-        return -score;
-    }
-    return score;
+    return myScore - oppScore;
 }
 
 std::vector<Move> GameModel::getAllPossibleMoves() const {
