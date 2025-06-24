@@ -35,6 +35,9 @@ private:
                                      std::vector<Position>& path, std::vector<Position>& captured,
                                      std::vector<Move>& allMoves, int dx, int dy) const;
     void checkPromotion(const Position& pos);
+    
+    // Rule validation helpers
+    bool isValidPionMove(const Position& from, const Position& to, const Piece* piece) const;
 
 public:
     GameModel();

@@ -20,6 +20,12 @@ public:
     Type getType() const { return type; }
     void promote() { type = Type::Dame; }
     bool isDame() const { return type == Type::Dame; }
+    bool isPion() const { return type == Type::Pion; }
+    
+    // Capability methods for explicit rule enforcement
+    bool canMoveBackward() const { return isDame(); }
+    bool canCaptureBackward() const { return isDame(); }
+    bool canMoveMultipleSquares() const { return isDame(); }
     
     virtual ~Piece() = default;
 

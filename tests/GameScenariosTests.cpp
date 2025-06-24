@@ -66,15 +66,15 @@ TEST_F(GameScenariosTests, ForcedCaptureScenario) {
 TEST_F(GameScenariosTests, MultipleChoiceCaptureScenario) {
     // Create a scenario where a piece has multiple capture options
     std::vector<std::vector<Piece*>> grid(8, std::vector<Piece*>(8, nullptr));
-    grid[3][3] = new Piece("Player1", {3, 3});
-    grid[2][2] = new Piece("Player2", {2, 2});  // Capturable enemy
-    grid[2][4] = new Piece("Player2", {2, 4});  // Another capturable enemy
+    grid[2][2] = new Piece("Player1", {2, 2});  // Player1 at top, can move downward
+    grid[3][1] = new Piece("Player2", {3, 1});  // Capturable enemy to the left-forward
+    grid[3][3] = new Piece("Player2", {3, 3});  // Capturable enemy to the right-forward
     
     initializeGrid(grid);
     
-    auto moves = model.getValidMoves({3, 3});
+    auto moves = model.getValidMoves({2, 2});
     
-    // Should have multiple capture options
+    // Should have multiple capture options (left-forward and right-forward)
     int captureCount = 0;
     for (const auto& move : moves) {
         if (move.isCapture()) {

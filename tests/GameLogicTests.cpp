@@ -60,15 +60,15 @@ TEST_F(GameLogicTests, SimpleMove) {
 
 TEST_F(GameLogicTests, CaptureMove) {
     std::vector<std::vector<Piece*>> grid(8, std::vector<Piece*>(8, nullptr));
-    grid[4][4] = new Piece("Player1", {4, 4});  // Changed positions for valid capture
-    grid[3][3] = new Piece("Player2", {3, 3});
+    grid[2][2] = new Piece("Player1", {2, 2});  // Player1 at top, can move down
+    grid[3][3] = new Piece("Player2", {3, 3});  // Player2 diagonally below Player1
     model.initializeFromGrid(grid);
     
-    auto moves = model.getValidMoves({4, 4});
+    auto moves = model.getValidMoves({2, 2});
     ASSERT_EQ(moves.size(), 1);
     EXPECT_EQ(moves[0].path.size(), 1);
-    EXPECT_EQ(moves[0].path[0].x, 2);
-    EXPECT_EQ(moves[0].path[0].y, 2);
+    EXPECT_EQ(moves[0].path[0].x, 4);  // Land at row 4 (moving downward)
+    EXPECT_EQ(moves[0].path[0].y, 4);  // Land at column 4
     EXPECT_TRUE(moves[0].isCapture());
     EXPECT_EQ(moves[0].captureCount(), 1);
 }
@@ -94,14 +94,14 @@ TEST_F(GameLogicTests, ExecuteMove) {
 
 TEST_F(GameLogicTests, MultipleCaptures) {
     std::vector<std::vector<Piece*>> grid(8, std::vector<Piece*>(8, nullptr));
-    grid[6][2] = new Piece("Player1", {6, 2});  // Changed position for valid multi-capture
-    grid[5][3] = new Piece("Player2", {5, 3});
-    grid[3][5] = new Piece("Player2", {3, 5});
+    grid[2][2] = new Piece("Player1", {2, 2});  // Player1 starting position
+    grid[3][3] = new Piece("Player2", {3, 3});  // First capture target
+    grid[5][5] = new Piece("Player2", {5, 5});  // Second capture target
     model.initializeFromGrid(grid);
     
-    auto moves = model.getValidMoves({6, 2});
+    auto moves = model.getValidMoves({2, 2});
     ASSERT_EQ(moves.size(), 1);
-    EXPECT_EQ(moves[0].path.size(), 2);
+    EXPECT_EQ(moves[0].path.size(), 2);  // Two jumps in the capture sequence
     EXPECT_EQ(moves[0].captureCount(), 2);
 }
 

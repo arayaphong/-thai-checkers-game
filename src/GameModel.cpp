@@ -142,21 +142,32 @@ std::vector<Move> GameModel::getValidMoves(const Position& piecePos) const {
     }
     
     // No captures available, return simple moves
-    return piece->isDame() 
+    return piece->isDame()
         ? generateDameSimpleMoves(piecePos)
         : generateSimpleMoves(piecePos);
+}
+
+bool GameModel::isValidPionMove(const Position& from, const Position& to, const Piece* piece) const {
+    if (!piece || piece->isDame()) return false;
+    
+    // Pions can only move one square diagonally forward
+    int forwardDirection = isPlayer1(piece->getColor()) ? 1 : -1;
+    int deltaX = to.x - from.x;
+    int deltaY = abs(to.y - from.y);
+    
+    // Must move exactly one square forward diagonally
+    return (deltaX == forwardDirection) && (deltaY == 1);
 }
 
 std::vector<Move> GameModel::generateSimpleMoves(const Position& from) const {
     std::vector<Move> moves;
     Piece* piece = grid[from.x][from.y];
-    if (!piece) return moves;
+    if (!piece || piece->isDame()) return moves;
     
-    int direction = isPlayer1(piece->getColor()) ? 1 : -1;
+    int forwardDirection = isPlayer1(piece->getColor()) ? 1 : -1;
     
-    // Check diagonal moves
     for (int dy : {-1, 1}) {
-        Position dest{from.x + direction, from.y + dy};
+        Position dest{from.x + forwardDirection, from.y + dy};
         if (isValidPosition(dest) && !grid[dest.x][dest.y]) {
             Move move{from, {dest}, {}, piece->getColor()};
             moves.push_back(move);
@@ -203,8 +214,10 @@ void GameModel::generateCaptureSequences(const Position& from, const Position& c
     if (!piece) return;
     
     bool foundCapture = false;
+    int forwardDirection = isPlayer1(piece->getColor()) ? 1 : -1;
     
-    for (const auto& [dx, dy] : DIAGONAL_DIRECTIONS) {
+    for (int dy : {-1, 1}) {
+        int dx = forwardDirection;
         Position enemy{current.x + dx, current.y + dy};
         Position landing{current.x + 2*dx, current.y + 2*dy};
         
