@@ -1,38 +1,39 @@
 # Thai Checkers Game
 
 ## Overview
-Thai Checkers is a two-player board game that involves strategic movement of pieces on a board. This project implements the game using modern C++17 features with a sophisticated architecture designed for game analytics, AI development, and strategic analysis.
+Thai Checkers is a two-player board game implemented in modern C++17. This project features a modular architecture with support for both Pion (regular) and Dame (king) pieces, providing a robust engine for analytics, AI, and scenario testing. The codebase ensures accurate rule enforcement and move generation for each piece type.
 
 ## Features
-- **Complete Game Engine**: Full implementation of Thai Checkers rules including move validation, capture sequences, and win conditions
-- **Analytics Framework**: Built-in position evaluation, move generation, and game state analysis
-- **Simulation Capabilities**: Clone game states for AI lookahead and scenario testing
-- **Comprehensive Testing**: Extensive unit tests covering all game scenarios
-- **Modern C++ Design**: Clean, modular architecture with separation of concerns
+- **Full Thai Checkers Engine**: Implements all rules, including forced captures, promotion, and multi-capture sequences.
+- **Analytics & Simulation**: Cloneable game states, move history, and position evaluation for AI and analysis.
+- **Custom Board Initialization**: Supports both standard and custom board setups.
+- **Comprehensive Testing**: Extensive unit tests for all game scenarios and rules.
+- **Modern C++ Design**: Clean, modular code with clear separation of concerns and memory management.
 
 ## Project Structure
-The project is organized as follows:
-
 ```
 thai-checkers/
-├── CMakeLists.txt              # Build configuration file for CMake
-├── src/                        # Source files for the game logic
-│   ├── main.cpp                # Entry point of the application
-│   ├── Board.cpp               # Board interface and display functionality
-│   ├── GameModel.cpp           # Core game engine and rules implementation
-│   └── Piece.cpp               # Piece representation and behavior
-├── include/                    # Header files for the game classes
-│   ├── Board.h                 # Board interface declaration
-│   ├── GameModel.h             # Game engine and analytics interface
-│   ├── Move.h                  # Move structure definitions
-│   ├── Piece.h                 # Piece class declaration
-│   └── Position.h              # Position coordinate structure
-├── tests/                      # Comprehensive unit test suite
-│   ├── CMakeLists.txt          # Build configuration for tests
-│   ├── BoardTests.cpp          # Board functionality tests
-│   ├── BoardDisplayTests.cpp   # Display and visualization tests
-│   ├── GameModelTests.cpp      # Core game logic tests
-│   └── PieceTests.cpp          # Piece behavior tests
+├── CMakeLists.txt              # Build configuration for CMake
+├── src/                        # Source files
+│   ├── main.cpp                # Application entry point and demonstrations
+│   ├── Board.cpp               # Board interface and display
+│   ├── GameModel.cpp           # Core game engine
+│   └── Piece.cpp               # Piece representation (Pion/Dame)
+├── include/                    # Header files
+│   ├── Board.h                 # Board interface
+│   ├── GameModel.h             # Game engine
+│   ├── Move.h                  # Move structure
+│   ├── Piece.h                 # Piece class (Pion/Dame)
+│   └── Position.h              # Position struct
+├── tests/                      # Unit tests
+│   ├── CMakeLists.txt          # Test build config
+│   ├── BoardTests.cpp          # Board logic tests
+│   ├── BoardDisplayTests.cpp   # Board display tests
+│   ├── GameLogicTests.cpp      # Game rules and move logic tests
+│   ├── GameScenariosTests.cpp  # Full scenario and integration tests
+│   └── PieceTests.cpp          # Piece class tests
+├── PionRules.md                # Pion movement and capture rules
+├── DameRules.md                # Dame movement and capture rules
 └── README.md                   # Project documentation
 ```
 
@@ -62,10 +63,19 @@ thai-checkers/
 
 ## Architecture Overview
 
+### Piece Types
+
+There are two types of pieces:
+- **Pion**: The regular piece, moves and captures forward diagonally.
+- **Dame**: The promoted piece (king), moves and captures diagonally in all directions and multiple squares.
+
 ### GameModel - Core Engine
 The heart of the system is the `GameModel` class which handles:
 - **Game State Management**: Board representation, current player, move history
 - **Move Generation**: Valid moves, capture sequences, forced captures
+  - Uses explicit functions for each piece type:
+    - `generatePionSimpleMoves`, `generatePionCaptureMoves`
+    - `generateDameSimpleMoves`, `generateDameCaptureMoves`
 - **Rule Enforcement**: Move validation, win conditions, game termination
 - **Analytics Support**: Position evaluation, move simulation, game cloning
 
@@ -89,57 +99,67 @@ Moves are represented as structured data containing:
 ```cpp
 #include "Board.h"
 
-Board board;
-board.initialize("Player1", "Player2");
-board.display();  // Shows the initial board state
+int main() {
+    Board board;
+    board.initialize("Player1", "Player2");
+    board.display();  // Shows the initial board state
+    return 0;
+}
 ```
 
 ### Move Generation and Execution
 ```cpp
-// Get all valid moves for current player
-auto allMoves = board.getAllValidMoves();
+#include "Board.h"
+#include "GameModel.h"
 
-// Get moves for a specific piece
-auto moves = board.getValidMovesFor({2, 1});
-
-// Execute a move through the model
-if (!moves.empty()) {
-    GameModel* model = board.getModel();
-    model->executeMove(moves[0]);
+int main() {
+    Board board;
+    board.initialize("Player1", "Player2");
+    auto allMoves = board.getAllValidMoves();
+    // Example: execute the first available move for the current player
+    for (const auto& [pos, moves] : allMoves) {
+        if (!moves.empty()) {
+            GameModel* model = board.getModel();
+            model->executeMove(moves[0]);
+            break;
+        }
+    }
+    return 0;
 }
-```
-
-### Analytics and Evaluation
-```cpp
-GameModel* model = board.getModel();
-
-// Evaluate position strength
-double score = model->evaluatePosition("Player1");
-
-// Clone for simulation
-GameModel* simulation = model->clone();
-simulation->executeMove(someMove);
-// ... analyze hypothetical position
-delete simulation;
 ```
 
 ### Custom Board Scenarios
 ```cpp
-// Create custom board position
-std::vector<std::vector<Piece*>> customGrid(8, std::vector<Piece*>(8, nullptr));
-customGrid[3][3] = new Piece("Player1", {3, 3});
-customGrid[4][4] = new Piece("Player2", {4, 4});
+#include "Board.h"
+#include "Piece.h"
+#include <vector>
 
-board.initialize(customGrid);
+int main() {
+    std::vector<std::vector<Piece*>> customGrid(8, std::vector<Piece*>(8, nullptr));
+    customGrid[3][3] = new Piece("Player1", {3, 3});
+    customGrid[4][4] = new Piece("Player2", {4, 4});
+    Board board;
+    board.initialize(customGrid);
+    board.display();
+    // Clean up allocated pieces
+    delete customGrid[3][3];
+    delete customGrid[4][4];
+    return 0;
+}
 ```
 
 ## Game Rules
 Thai Checkers follows these rules:
 - **Board Setup**: 8x8 board with pieces on dark squares of first two rows for each player
-- **Movement**: Pieces move diagonally forward one square to empty squares
-- **Capturing**: Jump diagonally over opponent pieces to capture them
+- **Movement**:
+  - **Pion**: Moves one square diagonally forward to empty squares
+  - **Dame**: Moves any number of squares diagonally in any direction
+- **Capturing**:
+  - **Pion**: Jumps diagonally forward over opponent pieces to capture
+  - **Dame**: Jumps diagonally over opponent pieces in any direction, any distance
 - **Multiple Captures**: If multiple captures are possible, they must all be taken in sequence
 - **Forced Captures**: If a capture is available, it must be taken (simple moves are not allowed)
+- **Promotion**: A Pion reaching the last row is promoted to Dame
 - **Win Conditions**: Win by capturing all opponent pieces or blocking all their moves
 
 ## Testing Framework
@@ -147,7 +167,7 @@ The project includes comprehensive unit tests covering:
 
 ### BoardTests
 - Initial board setup and piece placement
-- Move generation and validation
+- Move generation and validation (for both Pion and Dame)
 - Custom board scenarios
 - Multi-capture sequences
 - Edge cases and blocked pieces
@@ -174,46 +194,8 @@ ctest -V                         # Verbose output for debugging
 ## Development and Extension
 The modular architecture makes it easy to extend the system:
 
-### Adding AI Players
-```cpp
-// Implement using the analytics framework
-class AIPlayer {
-    GameModel* model;
-    
-    Move selectBestMove() {
-        auto moves = model->getAllPossibleMoves();
-        Move bestMove;
-        double bestScore = -INFINITY;
-        
-        for (const auto& move : moves) {
-            GameModel* sim = model->clone();
-            sim->executeMove(move);
-            double score = sim->evaluatePosition(currentPlayer);
-            if (score > bestScore) {
-                bestScore = score;
-                bestMove = move;
-            }
-            delete sim;
-        }
-        return bestMove;
-    }
-};
-```
-
-### Custom Evaluation Functions
-```cpp
-// Override or extend the evaluation system
-double customEvaluate(const GameModel& model, const std::string& player) {
-    double score = model.evaluatePosition(player);
-    // Add custom strategic factors
-    score += centerControlBonus(model, player);
-    score += mobilityBonus(model, player);
-    return score;
-}
-```
-
 ## Performance Considerations
-- Move generation is optimized for typical game positions
+- Move generation is optimized for typical game positions and distinguishes between Pion and Dame logic
 - Memory management handles piece allocation/deallocation
 - Game cloning supports efficient tree search algorithms
 - Lazy evaluation where possible to minimize computation
