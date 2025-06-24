@@ -5,10 +5,10 @@ Absolutely! Here is the revised and clarified explanation for the **Movement and
 ## Movement of the Dame (ฮอส)
 
 **Movement Capabilities:**  
-The Dame can move diagonally forward or backward in all four directions, with no limit to the number of empty squares it can travel in a single move. This is in contrast to a regular piece, which can only move one square diagonally forward at a time.
+The Dame can move diagonally forward or backward in all four directions, with no limit to the number of empty squares it can travel in a single move. This is in contrast to a pion piece, which can only move one square diagonally forward at a time.
 
 **Promotion to Dame:**  
-A regular piece is promoted to a Dame when it reaches the opponent's back row. After promotion, it gains all Dame movement and capturing abilities.
+A pion piece is promoted to a Dame when it reaches the opponent's back row. After promotion, it gains all Dame movement and capturing abilities.
 
 ---
 

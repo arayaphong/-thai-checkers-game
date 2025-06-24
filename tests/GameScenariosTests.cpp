@@ -150,17 +150,17 @@ TEST_F(GameScenariosTests, DameAdvancedMovementScenario) {
     
     // Verify Dame can capture if possible or move freely
     bool hasCapture = false;
-    bool hasRegularMove = false;
+    bool hasPionMove = false;
     for (const auto& move : moves) {
         if (move.isCapture()) {
             hasCapture = true;
         } else {
-            hasRegularMove = true;
+            hasPionMove = true;
         }
     }
     
-    // Dame should have either capture moves or regular moves
-    EXPECT_TRUE(hasCapture || hasRegularMove);
+    // Dame should have either capture moves or pion moves
+    EXPECT_TRUE(hasCapture || hasPionMove);
 }
 
 TEST_F(GameScenariosTests, ComplexMandatoryCaptureScenario) {
@@ -169,7 +169,7 @@ TEST_F(GameScenariosTests, ComplexMandatoryCaptureScenario) {
     grid[3][3] = new Piece("Player1", {3, 3});
     grid[3][3]->promote();  // Make it a Dame
     grid[4][4] = new Piece("Player2", {4, 4});      // Enemy piece
-    grid[1][1] = new Piece("Player1", {1, 1});      // Regular piece that could move
+    grid[1][1] = new Piece("Player1", {1, 1});      // Pion piece that could move
     
     initializeGrid(grid);
     
@@ -195,7 +195,7 @@ TEST_F(GameScenariosTests, EndGameScenario) {
     std::vector<std::vector<Piece*>> grid(8, std::vector<Piece*>(8, nullptr));
     grid[7][7] = new Piece("Player1", {7, 7});
     grid[7][7]->promote();  // Make it a Dame
-    grid[0][0] = new Piece("Player2", {0, 0});      // Player2 regular piece
+    grid[0][0] = new Piece("Player2", {0, 0});      // Player2 pion piece
     
     initializeGrid(grid);
     
@@ -207,7 +207,7 @@ TEST_F(GameScenariosTests, EndGameScenario) {
     model.setCurrentPlayer("Player2");
     auto player2Moves = model.getValidMoves({0, 0});
     
-    // Regular piece should have limited moves compared to Dame
+    // Pion piece should have limited moves compared to Dame
     EXPECT_LE(player2Moves.size(), player1Moves.size());
 }
 

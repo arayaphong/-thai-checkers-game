@@ -66,26 +66,26 @@ void runAnalyticsScenario(const std::string& scenarioName,
     }
 }
 
-void demonstrateRegularPieceMove() {
+void demonstratePionPieceMove() {
     std::vector<std::vector<Piece*>> grid(8, std::vector<Piece*>(8, nullptr));
     grid[3][3] = new Piece("Player1", {3, 3});
-    runAnalyticsScenario("Regular Piece Move Demonstration", grid);
+    runAnalyticsScenario("Pion Piece Move Demonstration", grid);
 }
 
-void demonstrateRegularPieceCapture() {
+void demonstratePionPieceCapture() {
     std::vector<std::vector<Piece*>> grid(8, std::vector<Piece*>(8, nullptr));
     grid[2][2] = new Piece("Player1", {2, 2});
     grid[3][3] = new Piece("Player2", {3, 3});
-    runAnalyticsScenario("Regular Piece Capture Demonstration", grid);
+    runAnalyticsScenario("Pion Piece Capture Demonstration", grid);
 }
 
 void demonstratePiecePromotion() {
     std::cout << "\n=== Piece Promotion to Dame ===" << std::endl;
-    std::cout << "Scenario: Regular piece reaches opponent's back row and gets promoted to Dame" << std::endl;
+    std::cout << "Scenario: Pion piece reaches opponent's back row and gets promoted to Dame" << std::endl;
     
     std::vector<std::vector<Piece*>> grid(8, std::vector<Piece*>(8, nullptr));
     
-    // Set up a regular piece close to promotion (Player1 moving toward row 7)
+    // Set up a pion piece close to promotion (Player1 moving toward row 7)
     grid[6][5] = new Piece("Player1", {6, 5}); // One move away from promotion
     
     // Add some context pieces but ensure promotion path is available
@@ -98,11 +98,11 @@ void demonstratePiecePromotion() {
     board.setModel(&model);
     
     std::cout << "\nInitial board setup:" << std::endl;
-    std::cout << "Player1 regular piece at (6,5) - one move away from promotion" << std::endl;
+    std::cout << "Player1 pion piece at (6,5) - one move away from promotion" << std::endl;
     board.display();
     
     std::cout << "\nPromotion Rules:" << std::endl;
-    std::cout << "1. Regular piece promotes to Dame when reaching opponent's back row" << std::endl;
+    std::cout << "1. Pion piece promotes to Dame when reaching opponent's back row" << std::endl;
     std::cout << "2. For Player1: promotion occurs when reaching row 7 (bottom)" << std::endl;
     std::cout << "3. For Player2: promotion occurs when reaching row 0 (top)" << std::endl;
     std::cout << "4. After promotion, piece gains Dame movement and capturing abilities" << std::endl;
@@ -114,7 +114,7 @@ void demonstratePiecePromotion() {
     std::cout << "\nAnalysis of available moves:" << std::endl;
     for (const auto& [pos, moves] : allMoves) {
         if (pos.x == 6 && pos.y == 5) {
-            std::cout << "Regular piece at (6,5) can:" << std::endl;
+            std::cout << "Pion piece at (6,5) can:" << std::endl;
             for (size_t i = 0; i < moves.size(); ++i) {
                 const auto& move = moves[i];
                 std::cout << "  Option " << i + 1 << ": ";
@@ -145,7 +145,7 @@ void demonstratePiecePromotion() {
             for (const auto& move : moves) {
                 if (!move.path.empty() && move.path.back().x == 7) {
                     std::cout << "\nExecuting promotion move:" << std::endl;
-                    std::cout << "Regular piece moves from (6,5) to (" 
+                    std::cout << "Pion piece moves from (6,5) to (" 
                               << move.path.back().x << "," << move.path.back().y << ")" << std::endl;
                     
                     model.executeMove(move);
@@ -173,14 +173,14 @@ void demonstratePiecePromotion() {
                 std::cout << "  Total move options: " << moves.size() << std::endl;
                 
                 // Categorize moves
-                int regularMoves = 0, captures = 0;
+                int pionMoves = 0, captures = 0;
                 int maxDistance = 0;
                 
                 for (const auto& move : moves) {
                     if (move.isCapture()) {
                         captures++;
                     } else {
-                        regularMoves++;
+                        pionMoves++;
                         // Calculate distance for regular moves
                         if (!move.path.empty()) {
                             int distance = abs(move.path.back().x - pos.x);
@@ -189,7 +189,7 @@ void demonstratePiecePromotion() {
                     }
                 }
                 
-                std::cout << "  Regular moves: " << regularMoves 
+                std::cout << "  Pion moves: " << pionMoves 
                           << " (max distance: " << maxDistance << " squares)" << std::endl;
                 std::cout << "  Capture options: " << captures << std::endl;
                 std::cout << "  Can move backward: YES (Dame ability)" << std::endl;
@@ -636,11 +636,11 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    if (pieceType == "regular" && scenario == "move") {
-        demonstrateRegularPieceMove();
-    } else if (pieceType == "regular" && scenario == "capture") {
-        demonstrateRegularPieceCapture();
-    } else if (pieceType == "regular" && scenario == "promotion") {
+    if (pieceType == "pion" && scenario == "move") {
+        demonstratePionPieceMove();
+    } else if (pieceType == "pion" && scenario == "capture") {
+        demonstratePionPieceCapture();
+    } else if (pieceType == "pion" && scenario == "promotion") {
         demonstratePiecePromotion();
     } else if (pieceType == "dame" && scenario == "move") {
         demonstrateDamePieceMove();
@@ -655,10 +655,10 @@ int main(int argc, char* argv[]) {
     } else if (scenario == "switching-turns") {
         demonstrateSwitchingTurnMove();
     } else {
-        std::cout << "\nUsage: " << argv[0] << " --piece-type <regular|dame> --scenario <move|capture|promotion|unlimited-movement|multiple-capture|mandatory-capture|switching-turns>" << std::endl;
+        std::cout << "\nUsage: " << argv[0] << " --piece-type <pion|dame> --scenario <move|capture|promotion|unlimited-movement|multiple-capture|mandatory-capture|switching-turns>" << std::endl;
         std::cout << "Running all demonstrations by default:" << std::endl;
-        demonstrateRegularPieceMove();
-        demonstrateRegularPieceCapture();
+        demonstratePionPieceMove();
+        demonstratePionPieceCapture();
         demonstratePiecePromotion();
         demonstrateDamePieceMove();
         demonstrateDamePieceCapture();

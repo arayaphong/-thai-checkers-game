@@ -6,11 +6,11 @@
 
 class Piece {
 public:
-    enum class Type { Regular, Dame };
+    enum class Type { Pion, Dame };
     
     Piece();
     Piece(const Piece& piece) = default;
-    Piece(const std::string& color, const Position& position, Type type = Type::Regular)
+    Piece(const std::string& color, const Position& position, Type type = Type::Pion)
         : color(color), position(position), type(type) {}
     
     const std::string& getColor() const;

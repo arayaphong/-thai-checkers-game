@@ -1,6 +1,6 @@
 #include "Piece.h"
 
-Piece::Piece() : color(""), position({0, 0}), type(Type::Regular) {}
+Piece::Piece() : color(""), position({0, 0}), type(Type::Pion) {}
 
 const std::string& Piece::getColor() const {
     return color;
