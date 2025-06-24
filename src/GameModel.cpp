@@ -120,7 +120,7 @@ bool GameModel::canAnyPieceCapture() const {
             if (grid[i][j] && grid[i][j]->getColor() == currentPlayer) {
                 std::vector<Move> captures = grid[i][j]->isDame() 
                     ? generateDameCaptureMoves({i, j})
-                    : generateCaptureMoves({i, j});
+                    : generatePionCaptureMoves({i, j});
                 if (!captures.empty()) return true;
             }
         }
@@ -138,13 +138,13 @@ std::vector<Move> GameModel::getValidMoves(const Position& piecePos) const {
     if (canAnyPieceCapture()) {
         return piece->isDame() 
             ? generateDameCaptureMoves(piecePos)
-            : generateCaptureMoves(piecePos);
+            : generatePionCaptureMoves(piecePos);
     }
     
     // No captures available, return simple moves
     return piece->isDame()
         ? generateDameSimpleMoves(piecePos)
-        : generateSimpleMoves(piecePos);
+        : generatePionSimpleMoves(piecePos);
 }
 
 bool GameModel::isValidPionMove(const Position& from, const Position& to, const Piece* piece) const {
@@ -159,7 +159,7 @@ bool GameModel::isValidPionMove(const Position& from, const Position& to, const 
     return (deltaX == forwardDirection) && (deltaY == 1);
 }
 
-std::vector<Move> GameModel::generateSimpleMoves(const Position& from) const {
+std::vector<Move> GameModel::generatePionSimpleMoves(const Position& from) const {
     std::vector<Move> moves;
     Piece* piece = grid[from.x][from.y];
     if (!piece || piece->isDame()) return moves;
@@ -196,20 +196,17 @@ std::vector<Move> GameModel::generateDameSimpleMoves(const Position& from) const
     return moves;
 }
 
-std::vector<Move> GameModel::generateCaptureMoves(const Position& from) const {
-    std::vector<Move> allMoves;
-    std::vector<Position> path;
-    std::vector<Position> captured;
-    
-    generateCaptureSequences(from, from, path, captured, allMoves);
-    
-    return allMoves;
+std::vector<Move> GameModel::generatePionCaptureMoves(const Position& from) const {
+    std::vector<Move> moves;
+    std::vector<Position> path, captured;
+    generatePionCaptureSequences(from, from, path, captured, moves);
+    return moves;
 }
 
-void GameModel::generateCaptureSequences(const Position& from, const Position& current,
-                                       std::vector<Position>& path,
-                                       std::vector<Position>& captured,
-                                       std::vector<Move>& allMoves) const {
+void GameModel::generatePionCaptureSequences(const Position& from, const Position& current,
+                                             std::vector<Position>& path,
+                                             std::vector<Position>& captured,
+                                             std::vector<Move>& allMoves) const {
     Piece* piece = grid[from.x][from.y];
     if (!piece) return;
     
@@ -231,7 +228,7 @@ void GameModel::generateCaptureSequences(const Position& from, const Position& c
         path.push_back(landing);
         captured.push_back(enemy);
         
-        generateCaptureSequences(from, landing, path, captured, allMoves);
+        generatePionCaptureSequences(from, landing, path, captured, allMoves);
         
         path.pop_back();
         captured.pop_back();
@@ -254,10 +251,9 @@ std::vector<Move> GameModel::generateDameCaptureMoves(const Position& from) cons
 }
 
 void GameModel::generateDameCaptureSequences(const Position& from, const Position& current,
-                                           std::vector<Position>& path,
-                                           std::vector<Position>& captured,
-                                           std::vector<Move>& allMoves,
-                                           int initialDx, int initialDy) const {
+                                             std::vector<Position>& path,
+                                             std::vector<Position>& captured,
+                                             std::vector<Move>& allMoves, int dx, int dy) const {
     Piece* piece = grid[from.x][from.y];
     if (!piece || !piece->isDame()) return;
     
@@ -312,7 +308,7 @@ std::map<Position, std::vector<Move>> GameModel::getAllValidMoves() const {
                 Position pos{i, j};
                 std::vector<Move> captures = grid[i][j]->isDame() 
                     ? generateDameCaptureMoves(pos)
-                    : generateCaptureMoves(pos);
+                    : generatePionCaptureMoves(pos);
                 
                 if (!captures.empty()) {
                     hasCaptures = true;
@@ -331,7 +327,7 @@ std::map<Position, std::vector<Move>> GameModel::getAllValidMoves() const {
                 Position pos{i, j};
                 std::vector<Move> moves = grid[i][j]->isDame() 
                     ? generateDameSimpleMoves(pos)
-                    : generateSimpleMoves(pos);
+                    : generatePionSimpleMoves(pos);
                 
                 if (!moves.empty()) {
                     allMoves[pos] = moves;

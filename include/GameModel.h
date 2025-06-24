@@ -24,16 +24,16 @@ private:
     std::string getOpponent(const std::string& player) const;
     
     // Move generation helpers
-    std::vector<Move> generateSimpleMoves(const Position& from) const;
-    std::vector<Move> generateCaptureMoves(const Position& from) const;
+    std::vector<Move> generatePionSimpleMoves(const Position& from) const;
+    std::vector<Move> generatePionCaptureMoves(const Position& from) const;
     std::vector<Move> generateDameSimpleMoves(const Position& from) const;
     std::vector<Move> generateDameCaptureMoves(const Position& from) const;
-    void generateCaptureSequences(const Position& from, const Position& current,
+    void generatePionCaptureSequences(const Position& from, const Position& current,
                                   std::vector<Position>& path, std::vector<Position>& captured,
                                   std::vector<Move>& allMoves) const;
     void generateDameCaptureSequences(const Position& from, const Position& current,
-                                     std::vector<Position>& path, std::vector<Position>& captured,
-                                     std::vector<Move>& allMoves, int dx, int dy) const;
+                                  std::vector<Position>& path, std::vector<Position>& captured,
+                                  std::vector<Move>& allMoves, int dx, int dy) const;
     void checkPromotion(const Position& pos);
     
     // Rule validation helpers
