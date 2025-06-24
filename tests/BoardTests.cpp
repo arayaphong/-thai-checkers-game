@@ -3,6 +3,8 @@
 #include <memory>
 #include <set>
 
+// Board Core Functionality Tests
+// Tests basic board operations: initialization, display, piece management
 class BoardTests : public ::testing::Test {
 protected:
     Board board;
@@ -12,26 +14,34 @@ protected:
     }
 };
 
-TEST_F(BoardTests, InitializeBoard) {
-    // Test that the board is initialized and players have pieces that can move.
+TEST_F(BoardTests, InitializeStandardBoard) {
+    // Test that the board is initialized with correct initial state
     board.setTurn("Player1");
     EXPECT_FALSE(board.getMoveablePieces().empty());
     board.setTurn("Player2");
     EXPECT_FALSE(board.getMoveablePieces().empty());
 }
 
-TEST_F(BoardTests, DisplayBoard) {
-    // Test the display functionality
-    EXPECT_NO_THROW(board.display());
+TEST_F(BoardTests, InitializeCustomGrid) {
+    // Test custom grid initialization
+    std::vector<std::vector<Piece*>> customGrid(8, std::vector<Piece*>(8, nullptr));
+    customGrid[3][3] = new Piece("Player1", {3, 3});
+    board.initialize(customGrid);
+    board.setTurn("Player1");
+    
+    auto pieces = board.getMoveablePieces();
+    ASSERT_EQ(pieces.size(), 1);
+    EXPECT_EQ(pieces[0]->getPosition().x, 3);
+    EXPECT_EQ(pieces[0]->getPosition().y, 3);
 }
 
-TEST_F(BoardTests, GetMoveablePieces) {
+TEST_F(BoardTests, GetMoveablePiecesForStandardSetup) {
     // Test getting pieces that can move for Player1
     board.setTurn("Player1");
     const auto player1Pieces = board.getMoveablePieces();
     EXPECT_FALSE(player1Pieces.empty());
 
-    // Assuming Player1 pieces are on rows 0 and 1, only pieces on row 1 can move initially.
+    // Player1 pieces on row 1 can move initially
     for (const auto& piece : player1Pieces) {
         Position pos = piece->getPosition();
         EXPECT_EQ(pos.x, 1);
@@ -42,7 +52,7 @@ TEST_F(BoardTests, GetMoveablePieces) {
     auto player2Pieces = board.getMoveablePieces();
     EXPECT_FALSE(player2Pieces.empty());
 
-    // Assuming Player2 pieces are on rows 6 and 7, only pieces on row 6 can move initially.
+    // Player2 pieces on row 6 can move initially
     for (const auto& piece : player2Pieces) {
         Position pos = piece->getPosition();
         EXPECT_EQ(pos.x, 6);

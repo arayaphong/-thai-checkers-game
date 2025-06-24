@@ -2,12 +2,11 @@ set(CMAKE_CXX_STANDARD 17)
 
 # Add test source files
 set(TEST_SOURCES
-    BoardTests.cpp
+    BoardCoreTests.cpp
     PieceTests.cpp
     BoardDisplayTests.cpp
-    GameModelTests.cpp
-    GameScenarioTests.cpp
-    # Removed StatesTest.cpp - States class no longer exists
+    GameLogicTests.cpp
+    GameScenariosTests.cpp
 )
 
 # Create the test executable
