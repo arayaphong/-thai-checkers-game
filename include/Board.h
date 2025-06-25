@@ -2,33 +2,41 @@
 #define BOARD_H
 
 #include <vector>
-#include <string>
 #include <memory>
+#include <string>
 #include "Piece.h"
-#include "States.h"
+#include "GameModel.h"
 
 class Board {
+private:
+    GameModel* model;
+    std::unique_ptr<GameModel> ownedModel;
+    
 public:
     Board();
     ~Board();
-    void initialize(const std::vector<std::vector<Piece*>>& grid);
-    void initialize(const std::string &player1Name, const std::string &player2Name);
+    
+    // Model management
+    void setModel(GameModel* m);
+    GameModel* getModel() { return model; }
+    const GameModel* getModel() const { return model; }
+    
+    // Initialization
+    void initialize(const std::string& player1, const std::string& player2);
+    void initialize(const std::vector<std::vector<Piece*>>& customGrid);
+    
+    // Display methods (for debugging/visualization)
     void display() const;
-    void setTurn(const std::string& color);
-    void movePiece(const std::vector<Position>& path);
-    States getStates(const Piece& piece) const;
+    
+    // Analytics-focused methods
+    std::vector<Move> getValidMovesFor(const Position& pos) const;
+    std::map<Position, std::vector<Move>> getAllValidMoves() const;
+    void executeMove(const Move& move);  // Wrapper for model->executeMove()
+    
+    // Legacy compatibility (to be removed)
+    void setTurn(const std::string& player);
     std::vector<std::unique_ptr<Piece>> getMoveablePieces() const;
-    std::string getCurrentPlayer() const;
-
-private:
-    friend class States;  // allow States to access grid and private fields
-    void clearBoard();
-    std::vector<std::vector<Piece*>> grid;
-    // Store player names for piece creation and display logic
-    std::string player1Name;
-    std::string player2Name;
-    std::string currentPlayer;
-    States* currentStates = nullptr;  // pointer to last States
+    std::string getCurrentPlayer() const;  // Wrapper for model->getCurrentPlayer()
 };
 
 #endif // BOARD_H

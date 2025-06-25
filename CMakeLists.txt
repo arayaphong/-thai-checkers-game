@@ -11,6 +11,14 @@ project(ThaiCheckers)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Option for code coverage
+option(CODE_COVERAGE "Enable coverage reporting" ON)
+if(CODE_COVERAGE)
+    message(STATUS "Building with code coverage flags")
+    add_compile_options(--coverage -O0 -g)
+    add_link_options(--coverage)
+endif()
+
 # Include directories
 include_directories(include)
 
@@ -18,7 +26,7 @@ include_directories(include)
 set(LIB_SOURCES
     src/Board.cpp
     src/Piece.cpp
-    src/States.cpp
+    src/GameModel.cpp  # Add new GameModel
 )
 
 # Create a library from the source files
@@ -43,4 +51,13 @@ FetchContent_MakeAvailable(googletest)
 # Add tests
 enable_testing()
 add_subdirectory(tests)
-add_test(NAME ThaiCheckersTests COMMAND ThaiCheckersTests)
+
+# Custom target to automate coverage
+add_custom_target(coverage
+    COMMAND ${CMAKE_COMMAND} -E rm -rf coverage_html
+    COMMAND ${CMAKE_COMMAND} -E make_directory coverage_html/v1
+    COMMAND ${CMAKE_COMMAND} -E chdir ${CMAKE_BINARY_DIR} ctest
+    COMMAND gcovr -r ${CMAKE_SOURCE_DIR} --html --html-details -o coverage_html/v1/index.html --filter include/GameModel.h --filter include/Move.h --filter include/Piece.h --filter include/Position.h --filter src/Board.cpp --filter src/GameModel.cpp --filter src/Piece.cpp
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMENT "Generating code coverage report in coverage_html/v1/index.html (filtered)"
+)

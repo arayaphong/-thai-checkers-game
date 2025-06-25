@@ -2,10 +2,11 @@ set(CMAKE_CXX_STANDARD 17)
 
 # Add test source files
 set(TEST_SOURCES
-    BoardTests.cpp
+    BoardCoreTests.cpp
     PieceTests.cpp
     BoardDisplayTests.cpp
-    StatesTest.cpp
+    GameLogicTests.cpp
+    GameScenariosTests.cpp
 )
 
 # Create the test executable
@@ -24,10 +25,14 @@ enable_testing()
 add_test(NAME BoardTests COMMAND ThaiCheckersTests)
 add_test(NAME PieceTests COMMAND ThaiCheckersTests)
 add_test(NAME BoardDisplayTests COMMAND ThaiCheckersTests)
-add_test(NAME StatesTest COMMAND ThaiCheckersTests)
+add_test(NAME GameModelTests COMMAND ThaiCheckersTests)
+add_test(NAME GameScenarioTests COMMAND ThaiCheckersTests)
 
-# Add coverage flags for test targets
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang|GNU")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage -O0 -g")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
+# Automatically generate coverage report after tests if CODE_COVERAGE is ON
+if(CODE_COVERAGE)
+    add_custom_command(
+        TARGET ThaiCheckersTests POST_BUILD
+        COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target coverage
+        COMMENT "Automatically generating code coverage report after tests (CODE_COVERAGE=ON)"
+    )
 endif()
