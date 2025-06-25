@@ -28,3 +28,12 @@ add_test(NAME BoardDisplayTests COMMAND ThaiCheckersTests)
 add_test(NAME GameModelTests COMMAND ThaiCheckersTests)
 add_test(NAME GameScenarioTests COMMAND ThaiCheckersTests)
 # Removed StatesTest
+
+# Automatically generate coverage report after tests if CODE_COVERAGE is ON
+if(CODE_COVERAGE)
+    add_custom_command(
+        TARGET ThaiCheckersTests POST_BUILD
+        COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target coverage
+        COMMENT "Automatically generating code coverage report after tests (CODE_COVERAGE=ON)"
+    )
+endif()
