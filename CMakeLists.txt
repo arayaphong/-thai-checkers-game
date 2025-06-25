@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 3.14)
 
+# --- Code coverage flags ---
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang|GNU")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage -O0 -g")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
+endif()
+
 project(ThaiCheckers)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -37,3 +43,4 @@ FetchContent_MakeAvailable(googletest)
 # Add tests
 enable_testing()
 add_subdirectory(tests)
+add_test(NAME ThaiCheckersTests COMMAND ThaiCheckersTests)

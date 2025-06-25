@@ -21,3 +21,9 @@ tests/*/CMakeFiles/
 
 # IDE files
 .vscode/
+
+# Ignore coverage reports and related files
+overlay/
+coverage*
+*.gcov
+coverage_html*/

@@ -25,3 +25,9 @@ add_test(NAME BoardTests COMMAND ThaiCheckersTests)
 add_test(NAME PieceTests COMMAND ThaiCheckersTests)
 add_test(NAME BoardDisplayTests COMMAND ThaiCheckersTests)
 add_test(NAME StatesTest COMMAND ThaiCheckersTests)
+
+# Add coverage flags for test targets
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang|GNU")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage -O0 -g")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
+endif()
