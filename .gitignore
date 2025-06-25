@@ -1,5 +1,12 @@
-# Ignore build artifacts
+# Build directories and files
 /build/
+lib/
+bin/
+coverage_html/
+Testing/
+tests/*/CMakeFiles/
+
+# CMake and build system files
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
@@ -8,16 +15,11 @@ Makefile
 build.ninja
 *.ninja
 
-# Ignore libraries and binaries
-lib/
-bin/
+# Compiled object and library files
 *.a
 *.o
 ThaiCheckers
 
-# Testing artifacts
-Testing/
-tests/*/CMakeFiles/
-
-# IDE files
+# IDE and OS-specific files
 .vscode/
+.DS_Store
