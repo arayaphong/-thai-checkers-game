@@ -6,10 +6,9 @@
 #include <optional>     // for std::optional
 #include <cstdint>      // for uint64_t, uint32_t, uint8_t
 #include <unordered_set>// for std::unordered_set
-
-// Enable C++20 bit ops in libstdc++
-#define _GLIBCXX_USE_CXX20_BIT_OPS
-#include <bit>         // for std::popcount
+#include <bit>          // C++20: std::popcount
+#include <compare>      // C++20: operator<=>
+#include <format>       // C++20: std::format
 
 
 // ===== Constants and Enums =====
@@ -128,12 +127,11 @@ public:
     
     // Print board state
     void printState() const {
-        std::cout << "=== SPARSE GAME STATE ===\n";
-        std::cout << "Raw state: 0x" << std::hex << std::uppercase << std::setw(16)
-                  << std::setfill('0') << state << std::dec << std::setfill(' ') << "\n";
-        std::cout << "Occupancy: " << std::bitset<32>(getOccupancyMask()) << "\n";
-        std::cout << "Types:     " << std::bitset<32>(getTypeEncoding()) << "\n";
-        std::cout << "Pieces: " << getPieceCount() << "\n\n";
+        std::cout << std::format("=== SPARSE GAME STATE ===\n");
+        std::cout << std::format("Raw state: 0x{:016X}\n", state);
+        std::cout << std::format("Occupancy: {:032b}\n", getOccupancyMask());
+        std::cout << std::format("Types:     {:032b}\n", getTypeEncoding());
+        std::cout << std::format("Pieces: {}\n\n", getPieceCount());
         std::cout << "Board layout:\n";
         for (int row = 3; row >= 0; row--) {
             for (int col = 0; col < 8; col++) {
@@ -142,11 +140,12 @@ public:
                 
                 char symbol = '.';
                 if (piece.has_value()) {
+                    using enum PieceType;
                     switch (piece.value()) {
-                        case PieceType::WHITE_PION: symbol = 'P'; break;
-                        case PieceType::WHITE_DAME: symbol = 'D'; break;
-                        case PieceType::BLACK_PION: symbol = 'p'; break;
-                        case PieceType::BLACK_DAME: symbol = 'd'; break;
+                        case WHITE_PION: symbol = 'P'; break;
+                        case WHITE_DAME: symbol = 'D'; break;
+                        case BLACK_PION: symbol = 'p'; break;
+                        case BLACK_DAME: symbol = 'd'; break;
                     }
                 }
                 std::cout << symbol << " ";
@@ -161,9 +160,8 @@ public:
         return getPieceCount() <= MAX_PIECES;
     }
     
-    // Equality operators
-    bool operator==(const SparseGameState& other) const { return state == other.state; }
-    bool operator!=(const SparseGameState& other) const { return !(*this == other); }
+    // Default comparison (C++20)
+    auto operator<=>(const SparseGameState& other) const = default;
 };
 
 
@@ -233,7 +231,7 @@ void runTests() {
 
 
 void demonstrateArithmetic() {
-    std::cout << "=== ARITHMETIC OPERATIONS DEMO ===\n";
+    std::cout << std::format("=== ARITHMETIC OPERATIONS DEMO ===\n");
     
     SparseGameState game1, game2;
     
@@ -245,22 +243,18 @@ void demonstrateArithmetic() {
     game2.setPiece(7, PieceType::BLACK_DAME);
     
     // Demonstrate fast operations
-    std::cout << "State 1: 0x" << std::hex << std::uppercase << std::setw(16)
-              << std::setfill('0') << game1.getRawState() << std::dec << std::setfill(' ') << "\n";
-    std::cout << "State 2: 0x" << std::hex << std::uppercase << std::setw(16)
-              << std::setfill('0') << game2.getRawState() << std::dec << std::setfill(' ') << "\n";
-    std::cout << "Equal: " << (game1 == game2 ? "YES" : "NO") << "\n";
-    std::cout << "Difference: 0x" << std::hex << std::uppercase
-              << GameStateArithmetic::getDifference(game1, game2)
-              << std::dec << "\n";
-    std::cout << "Hash 1: 0x" << std::hex << std::uppercase << GameStateArithmetic::hash(game1) << std::dec << "\n";
-    std::cout << "Hash 2: 0x" << std::hex << std::uppercase << GameStateArithmetic::hash(game2) << std::dec << "\n";
+    std::cout << std::format("State 1: 0x{:016X}\n", game1.getRawState());
+    std::cout << std::format("State 2: 0x{:016X}\n", game2.getRawState());
+    std::cout << std::format("Equal: {}\n", game1 == game2 ? "YES" : "NO");
+    std::cout << std::format("Difference: 0x{:X}\n", GameStateArithmetic::getDifference(game1, game2));
+    std::cout << std::format("Hash 1: 0x{:X}\n", GameStateArithmetic::hash(game1));
+    std::cout << std::format("Hash 2: 0x{:X}\n", GameStateArithmetic::hash(game2));
     
     // Demonstrate hash table usage
     std::unordered_set<SparseGameState> visited_states;
     visited_states.insert(game1);
     visited_states.insert(game2);
-    std::cout << "Unique states in hash set: " << visited_states.size() << "\n";
+    std::cout << std::format("Unique states in hash set: {}\n", visited_states.size());
     std::cout << "\n";
 }
 
