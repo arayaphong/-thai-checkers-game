@@ -6,7 +6,6 @@
 
 // Helper function to print the board
 void printBoard(const std::array<std::array<Piece*, 8>, 8>& board) {
-    std::cout << "=== GAME BOARD ===" << std::endl;
     // Column indices header
     std::cout << "   ";
     for (char col = 'A'; col <= 'H'; ++col) {
@@ -25,20 +24,21 @@ void printBoard(const std::array<std::array<Piece*, 8>, 8>& board) {
             }
             if (board[i][j]) {
                 if (board[i][j]->getColor() == "White") {
-                    symbol = board[i][j]->isDame() ? "▲" : "●";
+                    symbol = board[i][j]->isDame() ? "■" : "●";
                 } else { // Black
-                    symbol = board[i][j]->isDame() ? "△" : "○";
+                    symbol = board[i][j]->isDame() ? "□" : "○";
                 }
             }
             std::cout << symbol << " ";
         }
         std::cout << "\n";
     }
-    std::cout << "\nLegend: ●=White Pion, ▲=White Dame, ○=Black Pion, △=Black Dame\n\n";
 }
 
 int main(int argc, char* argv[]) {
     GameModel game;
+    std::cout << "\nLegend: ●=White Pion, ■=White Dame, ○=Black Pion, □=Black Dame\n\n";
+
     game.initializeStandardGame("White", "Black");
 
     while (!game.isGameOver()) {
@@ -52,12 +52,29 @@ int main(int argc, char* argv[]) {
             break;
         }
 
+        // Print all valid moves
+        for (const auto& [pos, moves] : allMoves) {
+            std::cout << "From " << char('A' + pos.y) << pos.x + 1 << ": ";
+            for (size_t i = 0; i < moves.size(); ++i) {
+                const auto& m = moves[i];
+                std::cout << "(";
+                for (size_t j = 0; j < m.path.size(); ++j) {
+                    const auto& p = m.path[j];
+                    std::cout << char('A' + p.y) << p.x + 1;
+                    if (j + 1 < m.path.size()) std::cout << "->";
+                }
+                std::cout << ")";
+                if (i + 1 < moves.size()) std::cout << ", ";
+            }
+            std::cout << std::endl;
+        }
+
         // Select the first valid move
         const Move& move = allMoves.begin()->second.front();
         
         std::cout << "Executing move from: "
-                  << (char)('A' + move.from.x) << move.from.y + 1 << " -> "
-                  << (char)('A' + move.path.back().x) << move.path.back().y + 1 << std::endl;
+                  << char('A' + move.from.y) << move.from.x + 1 << " -> "
+                  << char('A' + move.path.back().y) << move.path.back().x +1 << std::endl;
 
         game.executeMove(move);
         std::cout << "-------------------------" << std::endl;
