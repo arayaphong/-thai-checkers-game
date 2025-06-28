@@ -10,6 +10,7 @@
 
 class GameModel {
     inline static constexpr size_t BOARD_SIZE = 8;
+    inline static constexpr size_t MAX_MOVES = 200; // Maximum moves to prevent infinite games
     std::array<std::array<std::unique_ptr<Piece>, BOARD_SIZE>, BOARD_SIZE> grid{};
     std::string currentPlayer;
     std::string player1Name;

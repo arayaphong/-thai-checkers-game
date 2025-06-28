@@ -2,7 +2,7 @@
 #include <vector>
 #include <string>
 #include <cctype>
-#include "GameModel.h"
+#include "GameScenario.h"
 
 // Helper function to print the board
 void printBoard(const std::array<std::array<Piece*, 8>, 8>& board) {
@@ -36,58 +36,7 @@ void printBoard(const std::array<std::array<Piece*, 8>, 8>& board) {
 }
 
 int main(int argc, char* argv[]) {
-    GameModel game;
-    std::cout << "\nLegend: ●=White Pion, ■=White Dame, ○=Black Pion, □=Black Dame\n\n";
-
-    game.initializeStandardGame("White", "Black");
-
-    while (!game.isGameOver()) {
-        std::cout << "Current player: " << game.getCurrentPlayer() << std::endl;
-        std::cout << "Game Stage: " << game.getMoveHistory().size() << std::endl;
-        printBoard(game.getBoard());
-
-        auto allMoves = game.getAllValidMoves();
-        if (allMoves.empty()) {
-            std::cout << "No valid moves for " << game.getCurrentPlayer() << std::endl;
-            break;
-        }
-
-        // Print all valid moves
-        for (const auto& [pos, moves] : allMoves) {
-            std::cout << "From " << pos.toString() << ": ";
-            for (size_t i = 0; i < moves.size(); ++i) {
-                const auto& m = moves[i];
-                std::cout << "(";
-                for (size_t j = 0; j < m.path.size(); ++j) {
-                    const auto& p = m.path[j];
-                    std::cout << p.toString();
-                    if (j + 1 < m.path.size()) std::cout << "->";
-                }
-                std::cout << ")";
-                if (i + 1 < moves.size()) std::cout << ", ";
-            }
-            std::cout << std::endl;
-        }
-
-        // Select the first valid move
-        const Move& move = allMoves.begin()->second.front();
-        
-        std::cout << "Executing move from: "
-                  << move.from.toString() << " -> "
-                  << move.path.back().toString() << std::endl;
-
-        game.executeMove(move);
-        std::cout << "-------------------------" << std::endl;
-    }
-
-    std::cout << "Game over!" << std::endl;
-    std::cout << "Game Stage: " << game.getMoveHistory().size() << std::endl;
-    if (game.getWinner() != "") {
-        std::cout << "Winner: " << game.getWinner() << std::endl;
-    } else {
-        std::cout << "It's a draw!" << std::endl;
-    }
-    printBoard(game.getBoard());
-
+    GameScenario scenario;
+    scenario.run();
     return 0;
 }

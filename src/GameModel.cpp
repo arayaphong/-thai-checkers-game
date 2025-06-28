@@ -345,11 +345,18 @@ void GameModel::checkPromotion(const Position& pos) {
 }
 
 bool GameModel::isGameOver() const noexcept {
-    return getAllValidMoves().empty();
+    // Game ends if no valid moves available OR max moves reached
+    return getAllValidMoves().empty() || moveHistory.size() >= MAX_MOVES;
 }
 
 std::string_view GameModel::getWinner() const noexcept {
-    return isGameOver() ? getOpponent(currentPlayer) : std::string_view{};
+    if (!isGameOver()) return std::string_view{};
+    
+    // If max moves reached, it's a draw
+    if (moveHistory.size() >= MAX_MOVES) return std::string_view{};
+    
+    // Otherwise, winner is the opponent of the player who can't move
+    return getOpponent(currentPlayer);
 }
 
 int GameModel::getPieceCount(std::string_view player) const noexcept {
