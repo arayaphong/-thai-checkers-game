@@ -1,42 +1,24 @@
-#ifndef BOARD_H
-#define BOARD_H
-
-#include <vector>
-#include <memory>
-#include <string>
-#include "Piece.h"
+#pragma once
 #include "GameModel.h"
+#include <memory>
+#include <vector>
+#include <map>
 
 class Board {
-private:
-    GameModel* model;
     std::unique_ptr<GameModel> ownedModel;
+    GameModel* model = nullptr;
     
 public:
     Board();
-    ~Board();
-    
-    // Model management
     void setModel(GameModel* m);
-    GameModel* getModel() { return model; }
-    const GameModel* getModel() const { return model; }
-    
-    // Initialization
-    void initialize(const std::string& player1, const std::string& player2);
-    void initialize(const std::vector<std::vector<Piece*>>& customGrid);
-    
-    // Display methods (for debugging/visualization)
+    void initialize(const std::vector<std::vector<std::unique_ptr<Piece>>>& initialGrid);
+    void initialize(const std::vector<std::vector<Piece*>>& initialGrid); // Overload for raw pointer grid
+    void initialize(const std::string& p1, const std::string& p2);
+    void setTurn(const std::string& color);
     void display() const;
-    
-    // Analytics-focused methods
     std::vector<Move> getValidMovesFor(const Position& pos) const;
     std::map<Position, std::vector<Move>> getAllValidMoves() const;
-    void executeMove(const Move& move);  // Wrapper for model->executeMove()
-    
-    // Legacy compatibility (to be removed)
-    void setTurn(const std::string& player);
+    void executeMove(const Move& move);
     std::vector<std::unique_ptr<Piece>> getMoveablePieces() const;
-    std::string getCurrentPlayer() const;  // Wrapper for model->getCurrentPlayer()
+    std::string getCurrentPlayer() const;
 };
-
-#endif // BOARD_H

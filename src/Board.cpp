@@ -1,19 +1,16 @@
 #include "Board.h"
 #include <iostream>
-#include <iomanip>
 #include <set>
 #include <algorithm>
 
-Board::Board() : model(nullptr) {}
-
-Board::~Board() {}
+Board::Board() = default;
 
 void Board::setModel(GameModel* m) {
     model = m;
-    ownedModel.reset(); // Clear owned model when external model is set
+    ownedModel.reset();
 }
 
-void Board::initialize(const std::vector<std::vector<Piece*>>& initialGrid) {
+void Board::initialize(const std::vector<std::vector<std::unique_ptr<Piece>>>& initialGrid) {
     ownedModel = std::make_unique<GameModel>();
     ownedModel->initializeFromGrid(initialGrid);
     model = ownedModel.get();
@@ -25,16 +22,32 @@ void Board::initialize(const std::string& p1, const std::string& p2) {
     model = ownedModel.get();
 }
 
-void Board::setTurn(const std::string& color) {
-    if (model) {
-        model->setCurrentPlayer(color);
+// Add overload to accept raw pointer grid
+void Board::initialize(const std::vector<std::vector<Piece*>>& rawGrid) {
+    ownedModel = std::make_unique<GameModel>();
+    // Convert raw pointer grid to unique_ptr grid
+    std::vector<std::vector<std::unique_ptr<Piece>>> initialGrid;
+    initialGrid.resize(rawGrid.size());
+    for (size_t i = 0; i < rawGrid.size(); ++i) {
+        initialGrid[i].resize(rawGrid[i].size());
+        for (size_t j = 0; j < rawGrid[i].size(); ++j) {
+            if (rawGrid[i][j]) {
+                initialGrid[i][j] = std::make_unique<Piece>(*rawGrid[i][j]);
+            }
+        }
     }
+    ownedModel->initializeFromGrid(initialGrid);
+    model = ownedModel.get();
+}
+
+void Board::setTurn(const std::string& color) {
+    if (model) model->setCurrentPlayer(color);
 }
 
 void Board::display() const {
     if (!model) return;
     
-    auto grid = model->getBoard();
+    const auto& grid = model->getBoard();
     
     // Get all unique player colors to determine symbols
     std::set<std::string> playerColors;
@@ -104,7 +117,7 @@ std::vector<std::unique_ptr<Piece>> Board::getMoveablePieces() const {
     
     for (const auto& [pos, moves] : allMoves) {
         if (!moves.empty()) {
-            auto grid = model->getBoard();
+            const auto& grid = model->getBoard();
             if (grid[pos.x][pos.y]) {
                 moveablePieces.push_back(std::make_unique<Piece>(*grid[pos.x][pos.y]));
             }

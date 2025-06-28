@@ -20,7 +20,7 @@ protected:
     }
     
     // Helper function to create a grid and initialize the model
-    void initializeGrid(const std::vector<std::vector<Piece*>>& grid) {
+    void initializeGrid(const std::vector<std::vector<std::unique_ptr<Piece>>>& grid) {
         model.initializeFromGrid(grid);
     }
 };
@@ -46,11 +46,12 @@ TEST_F(GameScenariosTests, StandardGameProgression) {
 
 TEST_F(GameScenariosTests, ForcedCaptureScenario) {
     // Create a scenario where Player1 must capture
-    std::vector<std::vector<Piece*>> grid(8, std::vector<Piece*>(8, nullptr));
-    grid[2][2] = new Piece("Player1", {2, 2});
-    grid[3][3] = new Piece("Player2", {3, 3});
-    grid[1][1] = new Piece("Player1", {1, 1});  // Another piece that could move
-    
+    std::vector<std::vector<std::unique_ptr<Piece>>> grid(8);
+    for (auto& row : grid) row.resize(8);
+    grid[2][2] = std::make_unique<Piece>("Player1", Position{2, 2});
+    grid[3][3] = std::make_unique<Piece>("Player2", Position{3, 3});
+    grid[1][1] = std::make_unique<Piece>("Player1", Position{1, 1});  // Another piece that could move
+
     initializeGrid(grid);
     
     auto allMoves = model.getAllValidMoves();
@@ -65,11 +66,12 @@ TEST_F(GameScenariosTests, ForcedCaptureScenario) {
 
 TEST_F(GameScenariosTests, MultipleChoiceCaptureScenario) {
     // Create a scenario where a piece has multiple capture options
-    std::vector<std::vector<Piece*>> grid(8, std::vector<Piece*>(8, nullptr));
-    grid[2][2] = new Piece("Player1", {2, 2});  // Player1 at top, can move downward
-    grid[3][1] = new Piece("Player2", {3, 1});  // Capturable enemy to the left-forward
-    grid[3][3] = new Piece("Player2", {3, 3});  // Capturable enemy to the right-forward
-    
+    std::vector<std::vector<std::unique_ptr<Piece>>> grid(8);
+    for (auto& row : grid) row.resize(8);
+    grid[2][2] = std::make_unique<Piece>("Player1", Position{2, 2});  // Player1 at top, can move downward
+    grid[3][1] = std::make_unique<Piece>("Player2", Position{3, 1});  // Capturable enemy to the left-forward
+    grid[3][3] = std::make_unique<Piece>("Player2", Position{3, 3});  // Capturable enemy to the right-forward
+
     initializeGrid(grid);
     
     auto moves = model.getValidMoves({2, 2});
@@ -86,12 +88,13 @@ TEST_F(GameScenariosTests, MultipleChoiceCaptureScenario) {
 
 TEST_F(GameScenariosTests, ChainCaptureScenario) {
     // Create a scenario with chain captures
-    std::vector<std::vector<Piece*>> grid(8, std::vector<Piece*>(8, nullptr));
-    grid[1][1] = new Piece("Player1", {1, 1});
-    grid[2][2] = new Piece("Player2", {2, 2});
-    grid[4][4] = new Piece("Player2", {4, 4});
-    grid[6][6] = new Piece("Player2", {6, 6});
-    
+    std::vector<std::vector<std::unique_ptr<Piece>>> grid(8);
+    for (auto& row : grid) row.resize(8);
+    grid[1][1] = std::make_unique<Piece>("Player1", Position{1, 1});
+    grid[2][2] = std::make_unique<Piece>("Player2", Position{2, 2});
+    grid[4][4] = std::make_unique<Piece>("Player2", Position{4, 4});
+    grid[6][6] = std::make_unique<Piece>("Player2", Position{6, 6});
+
     initializeGrid(grid);
     
     auto moves = model.getValidMoves({1, 1});
@@ -109,9 +112,10 @@ TEST_F(GameScenariosTests, ChainCaptureScenario) {
 
 TEST_F(GameScenariosTests, PromotionScenario) {
     // Test piece promotion to Dame
-    std::vector<std::vector<Piece*>> grid(8, std::vector<Piece*>(8, nullptr));
-    grid[6][6] = new Piece("Player1", {6, 6});  // Near promotion row
-    
+    std::vector<std::vector<std::unique_ptr<Piece>>> grid(8);
+    for (auto& row : grid) row.resize(8);
+    grid[6][6] = std::make_unique<Piece>("Player1", Position{6, 6});  // Near promotion row
+
     initializeGrid(grid);
     
     // Move to promotion row
@@ -135,12 +139,13 @@ TEST_F(GameScenariosTests, PromotionScenario) {
 
 TEST_F(GameScenariosTests, DameAdvancedMovementScenario) {
     // Test Dame's advanced movement capabilities
-    std::vector<std::vector<Piece*>> grid(8, std::vector<Piece*>(8, nullptr));
-    grid[4][4] = new Piece("Player1", {4, 4});
+    std::vector<std::vector<std::unique_ptr<Piece>>> grid(8);
+    for (auto& row : grid) row.resize(8);
+    grid[4][4] = std::make_unique<Piece>("Player1", Position{4, 4});
     grid[4][4]->promote();  // Make it a Dame
-    grid[2][2] = new Piece("Player2", {2, 2});      // Enemy piece
-    grid[6][6] = new Piece("Player2", {6, 6});      // Another enemy piece
-    
+    grid[2][2] = std::make_unique<Piece>("Player2", Position{2, 2});      // Enemy piece
+    grid[6][6] = std::make_unique<Piece>("Player2", Position{6, 6});      // Another enemy piece
+
     initializeGrid(grid);
     
     auto moves = model.getValidMoves({4, 4});
@@ -165,12 +170,13 @@ TEST_F(GameScenariosTests, DameAdvancedMovementScenario) {
 
 TEST_F(GameScenariosTests, ComplexMandatoryCaptureScenario) {
     // Test mandatory capture rules with multiple pieces
-    std::vector<std::vector<Piece*>> grid(8, std::vector<Piece*>(8, nullptr));
-    grid[3][3] = new Piece("Player1", {3, 3});
+    std::vector<std::vector<std::unique_ptr<Piece>>> grid(8);
+    for (auto& row : grid) row.resize(8);
+    grid[3][3] = std::make_unique<Piece>("Player1", Position{3, 3});
     grid[3][3]->promote();  // Make it a Dame
-    grid[4][4] = new Piece("Player2", {4, 4});      // Enemy piece
-    grid[1][1] = new Piece("Player1", {1, 1});      // Pion piece that could move
-    
+    grid[4][4] = std::make_unique<Piece>("Player2", Position{4, 4});      // Enemy piece
+    grid[1][1] = std::make_unique<Piece>("Player1", Position{1, 1});      // Pion piece that could move
+
     initializeGrid(grid);
     
     auto allMoves = model.getAllValidMoves();
@@ -192,11 +198,12 @@ TEST_F(GameScenariosTests, ComplexMandatoryCaptureScenario) {
 
 TEST_F(GameScenariosTests, EndGameScenario) {
     // Test end game with few pieces remaining
-    std::vector<std::vector<Piece*>> grid(8, std::vector<Piece*>(8, nullptr));
-    grid[7][7] = new Piece("Player1", {7, 7});
+    std::vector<std::vector<std::unique_ptr<Piece>>> grid(8);
+    for (auto& row : grid) row.resize(8);
+    grid[7][7] = std::make_unique<Piece>("Player1", Position{7, 7});
     grid[7][7]->promote();  // Make it a Dame
-    grid[0][0] = new Piece("Player2", {0, 0});      // Player2 pion piece
-    
+    grid[0][0] = std::make_unique<Piece>("Player2", Position{0, 0});      // Player2 pion piece
+
     initializeGrid(grid);
     
     // Dame should dominate the end game
@@ -213,10 +220,11 @@ TEST_F(GameScenariosTests, EndGameScenario) {
 
 TEST_F(GameScenariosTests, NoValidMovesScenario) {
     // Test scenario where a player has no valid moves (game over)
-    std::vector<std::vector<Piece*>> grid(8, std::vector<Piece*>(8, nullptr));
-    grid[7][7] = new Piece("Player1", {7, 7});  // Player1 at bottom corner (blocked)
-    grid[0][0] = new Piece("Player2", {0, 0});  // Player2 has moves
-    
+    std::vector<std::vector<std::unique_ptr<Piece>>> grid(8);
+    for (auto& row : grid) row.resize(8);
+    grid[7][7] = std::make_unique<Piece>("Player1", Position{7, 7});  // Player1 at bottom corner (blocked)
+    grid[0][0] = std::make_unique<Piece>("Player2", Position{0, 0});  // Player2 has moves
+
     initializeGrid(grid);
     
     // Player1 should have no moves (blocked at bottom)

@@ -1,38 +1,31 @@
-#ifndef PIECE_H
-#define PIECE_H
-
+#pragma once
 #include <string>
-#include "Position.h"
+
+struct Position { 
+    int x, y; 
+
+    // Enable use in associative containers and comparisons
+    bool operator<(const Position& other) const { return x != other.x ? x < other.x : y < other.y; }
+    bool operator==(const Position& other) const { return x == other.x && y == other.y; }
+};
 
 class Piece {
+    std::string color;
+    Position position;
+    bool isKing = false;
+
 public:
+    Piece() = default;
+    Piece(std::string color, Position pos);
+    // Type of piece (Pion or Dame)
     enum class Type { Pion, Dame };
-    
-    Piece();
-    Piece(const Piece& piece) = default;
-    Piece(const std::string& color, const Position& position, Type type = Type::Pion)
-        : color(color), position(position), type(type) {}
+    // Construct with explicit type
+    Piece(std::string color, Position pos, Type type);
+    Piece(const Piece& other);  // Copy constructor
     
     const std::string& getColor() const;
     Position getPosition() const;
-    void setPosition(const Position& newPosition);
-    
-    Type getType() const { return type; }
-    void promote() { type = Type::Dame; }
-    bool isDame() const { return type == Type::Dame; }
-    bool isPion() const { return type == Type::Pion; }
-    
-    // Capability methods for explicit rule enforcement
-    bool canMoveBackward() const { return isDame(); }
-    bool canCaptureBackward() const { return isDame(); }
-    bool canMoveMultipleSquares() const { return isDame(); }
-    
-    virtual ~Piece() = default;
-
-private:
-    std::string color;
-    Position position;
-    Type type;
+    void setPosition(Position newPosition);
+    bool isDame() const;
+    void promote();
 };
-
-#endif // PIECE_H

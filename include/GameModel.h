@@ -1,21 +1,54 @@
-#ifndef GAMEMODEL_H
-#define GAMEMODEL_H
-
-#include <vector>
-#include <string>
-#include <map>
+#pragma once
 #include "Piece.h"
-#include "Move.h"
+#include <vector>
+#include <memory>
+#include <map>
+#include <set>
+
+struct Move {
+    Position from;
+    std::vector<Position> path;
+    std::vector<Position> captured;
+    std::string playerColor;
+    // Returns true if this move captures at least one piece
+    bool isCapture() const { return !captured.empty(); }
+    // Returns the number of captured pieces
+    int captureCount() const { return static_cast<int>(captured.size()); }
+};
 
 class GameModel {
-private:
-    std::vector<std::vector<Piece*>> grid;
+    static constexpr int BOARD_SIZE = 8;
+    std::vector<std::vector<std::unique_ptr<Piece>>> grid;
     std::string currentPlayer;
-    std::vector<Move> moveHistory;
     std::string player1Name;
     std::string player2Name;
+    std::vector<Move> moveHistory;
     
-    // Helper methods
+public:
+    GameModel();
+    // Destructor
+    ~GameModel();
+    void initializeStandardGame(const std::string& player1, const std::string& player2);
+    void initializeFromGrid(const std::vector<std::vector<std::unique_ptr<Piece>>>& initialGrid);
+    // Overload to initialize from raw pointer grid
+    void initializeFromGrid(const std::vector<std::vector<Piece*>>& rawGrid);
+    void setCurrentPlayer(const std::string& player);
+    // Getter for current player's color
+    std::string getCurrentPlayer() const;
+    // Get a copy of the board as raw pointers for readonly access
+    std::vector<std::vector<Piece*>> getBoard() const;
+    std::vector<Move> getValidMoves(const Position& piecePos) const;
+    std::map<Position, std::vector<Move>> getAllValidMoves() const;
+    void executeMove(const Move& move);
+    bool isGameOver() const;
+    std::string getWinner() const;
+    int getPieceCount(const std::string& player) const;
+    // Clone model (caller takes ownership and should delete)
+    GameModel* clone() const;
+    // Access move history
+    const std::vector<Move>& getMoveHistory() const;
+
+private:
     void clearGrid();
     bool isValidPosition(const Position& pos) const;
     bool canAnyPieceCapture() const;
@@ -38,33 +71,4 @@ private:
     
     // Rule validation helpers
     bool isValidPionMove(const Position& from, const Position& to, const Piece* piece) const;
-
-public:
-    GameModel();
-    ~GameModel();
-    
-    // Core game functionality
-    void initializeStandardGame(const std::string& player1, const std::string& player2);
-    void initializeFromGrid(const std::vector<std::vector<Piece*>>& initialGrid);
-    void executeMove(const Move& move);
-    
-    // Game state access
-    std::vector<std::vector<Piece*>> getBoard() const { return grid; }
-    std::string getCurrentPlayer() const { return currentPlayer; }
-    std::vector<Move> getMoveHistory() const { return moveHistory; }
-    
-    // Move queries
-    std::vector<Move> getValidMoves(const Position& piecePos) const;
-    std::map<Position, std::vector<Move>> getAllValidMoves() const;
-    
-    // Game status
-    bool isGameOver() const;
-    std::string getWinner() const;
-    int getPieceCount(const std::string& player) const;
-    
-    // Advanced features
-    GameModel* clone() const;
-    void setCurrentPlayer(const std::string& player); // For Board compatibility
 };
-
-#endif // GAMEMODEL_H
