@@ -1,13 +1,7 @@
 #pragma once
 #include <string>
-
-struct Position { 
-    int x, y; 
-
-    // Enable use in associative containers and comparisons
-    bool operator<(const Position& other) const { return x != other.x ? x < other.x : y < other.y; }
-    bool operator==(const Position& other) const { return x == other.x && y == other.y; }
-};
+#include <string_view>
+#include "Position.h"
 
 class Piece {
     std::string color;
@@ -16,16 +10,16 @@ class Piece {
 
 public:
     Piece() = default;
-    Piece(std::string color, Position pos);
+    Piece(std::string_view color, Position pos);
     // Type of piece (Pion or Dame)
     enum class Type { Pion, Dame };
     // Construct with explicit type
-    Piece(std::string color, Position pos, Type type);
-    Piece(const Piece& other);  // Copy constructor
+    Piece(std::string_view color, Position pos, Type type);
+    Piece(const Piece& other) = default;
     
-    const std::string& getColor() const;
-    Position getPosition() const;
-    void setPosition(Position newPosition);
-    bool isDame() const;
-    void promote();
+    [[nodiscard]] std::string_view getColor() const noexcept;
+    [[nodiscard]] const Position& getPosition() const noexcept;
+    void setPosition(Position newPosition) noexcept;
+    [[nodiscard]] bool isDame() const noexcept;
+    void promote() noexcept;
 };

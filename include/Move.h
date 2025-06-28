@@ -8,11 +8,11 @@
 struct Move {
     Position from;
     std::vector<Position> path;
-    std::vector<Position> captured;  // Changed from 'captures' to 'captured'
-    std::string player;
-    
-    bool isCapture() const { return !captured.empty(); }
-    int captureCount() const { return captured.size(); }
+    std::vector<Position> captured;
+    std::string playerColor;
+
+    [[nodiscard]] bool isCapture() const noexcept { return !captured.empty(); }
+    [[nodiscard]] int captureCount() const noexcept { return static_cast<int>(captured.size()); }
 };
 
 #endif // MOVE_H

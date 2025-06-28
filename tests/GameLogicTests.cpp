@@ -122,7 +122,7 @@ TEST_F(GameLogicTests, CloneModel) {
     grid[3][3] = new Piece("Player1", {3, 3});
     model.initializeFromGrid(grid);
     
-    GameModel* clone = model.clone();
+    auto clone = model.clone();
     
     // Verify clone has same state
     auto origBoard = model.getBoard();
@@ -133,7 +133,7 @@ TEST_F(GameLogicTests, CloneModel) {
     EXPECT_EQ(cloneBoard[3][3]->getPosition().x, 3);
     EXPECT_EQ(cloneBoard[3][3]->getPosition().y, 3);
     
-    delete clone;
+    // No need to delete clone - unique_ptr handles it
 }
 
 // Dame (King) Piece Tests

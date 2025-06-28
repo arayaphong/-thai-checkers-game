@@ -2,6 +2,7 @@
 #include <iostream>
 #include <set>
 #include <algorithm>
+#include <string_view>
 
 Board::Board() = default;
 
@@ -16,7 +17,7 @@ void Board::initialize(const std::vector<std::vector<std::unique_ptr<Piece>>>& i
     model = ownedModel.get();
 }
 
-void Board::initialize(const std::string& p1, const std::string& p2) {
+void Board::initialize(std::string_view p1, std::string_view p2) {
     ownedModel = std::make_unique<GameModel>();
     ownedModel->initializeStandardGame(p1, p2);
     model = ownedModel.get();
@@ -40,7 +41,7 @@ void Board::initialize(const std::vector<std::vector<Piece*>>& rawGrid) {
     model = ownedModel.get();
 }
 
-void Board::setTurn(const std::string& color) {
+void Board::setTurn(std::string_view color) noexcept {
     if (model) model->setCurrentPlayer(color);
 }
 
@@ -50,7 +51,7 @@ void Board::display() const {
     const auto& grid = model->getBoard();
     
     // Get all unique player colors to determine symbols
-    std::set<std::string> playerColors;
+    std::set<std::string_view> playerColors;
     for (int i = 0; i < 8; ++i) {
         for (int j = 0; j < 8; ++j) {
             if (grid[i][j]) {
@@ -60,7 +61,7 @@ void Board::display() const {
     }
     
     // Convert to vector for consistent ordering
-    std::vector<std::string> players(playerColors.begin(), playerColors.end());
+    std::vector<std::string_view> players(playerColors.begin(), playerColors.end());
     std::sort(players.begin(), players.end()); // Consistent ordering
     
     // Print column indices
@@ -127,6 +128,6 @@ std::vector<std::unique_ptr<Piece>> Board::getMoveablePieces() const {
     return moveablePieces;
 }
 
-std::string Board::getCurrentPlayer() const {
-    return model ? model->getCurrentPlayer() : "";
+std::string_view Board::getCurrentPlayer() const {
+    return model ? model->getCurrentPlayer() : std::string_view{};
 }

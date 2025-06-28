@@ -2,16 +2,20 @@
 #define POSITION_H
 
 struct Position {
-    int x, y;
+    int x = 0;
+    int y = 0;
     
-    Position() : x(0), y(0) {}
-    Position(int x, int y) : x(x), y(y) {}
+    constexpr Position() noexcept = default;
+    constexpr Position(int x_, int y_) noexcept : x(x_), y(y_) {}
     
-    bool operator==(const Position& other) const {
+    [[nodiscard]] constexpr bool operator==(const Position& other) const noexcept {
         return x == other.x && y == other.y;
     }
+    [[nodiscard]] constexpr bool operator!=(const Position& other) const noexcept {
+        return !(*this == other);
+    }
     
-    bool operator<(const Position& other) const {
+    [[nodiscard]] constexpr bool operator<(const Position& other) const noexcept {
         return x < other.x || (x == other.x && y < other.y);
     }
 };

@@ -565,7 +565,7 @@ void demonstrateSwitchingTurnMove() {
         std::cout << std::endl;
         
         // Store current player before move execution for comparison
-        std::string playerBeforeMove = model.getCurrentPlayer();
+        std::string playerBeforeMove{model.getCurrentPlayer()};
         
         // Execute the move
         model.executeMove(firstMove);

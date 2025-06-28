@@ -1,18 +1,10 @@
 #include "GameModel.h"
 #include <algorithm>
+#include <array>
 #include <stack>
 
 namespace {
-constexpr int BOARD_SIZE = 8;
-const std::vector<std::pair<int, int>> DIAGONAL_DIRECTIONS = {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
-}
-
-GameModel::GameModel() : currentPlayer(""), player1Name(""), player2Name("") {
-    grid.clear();
-    grid.resize(BOARD_SIZE);
-    for (auto& row : grid) {
-        row.resize(BOARD_SIZE);
-    }
+inline constexpr std::array<std::pair<int, int>, 4> DIAGONAL_DIRECTIONS{{{1, 1}, {1, -1}, {-1, 1}, {-1, -1}}};
 }
 
 void GameModel::clearGrid() {
@@ -23,23 +15,24 @@ void GameModel::clearGrid() {
     }
 }
 
-bool GameModel::isValidPosition(const Position& pos) const {
-    return pos.x >= 0 && pos.x < BOARD_SIZE && pos.y >= 0 && pos.y < BOARD_SIZE;
+constexpr bool GameModel::isValidPosition(const Position& pos) noexcept {
+    return pos.x >= 0 && pos.x < static_cast<int>(BOARD_SIZE) \
+           && pos.y >= 0 && pos.y < static_cast<int>(BOARD_SIZE);
 }
 
-bool GameModel::isPlayer1(const std::string& player) const {
+bool GameModel::isPlayer1(std::string_view player) const noexcept {
     return player == player1Name;
 }
 
-bool GameModel::isPlayer2(const std::string& player) const {
+bool GameModel::isPlayer2(std::string_view player) const noexcept {
     return player == player2Name;
 }
 
-std::string GameModel::getOpponent(const std::string& player) const {
+std::string_view GameModel::getOpponent(std::string_view player) const noexcept {
     return isPlayer1(player) ? player2Name : player1Name;
 }
 
-void GameModel::initializeStandardGame(const std::string& player1, const std::string& player2) {
+void GameModel::initializeStandardGame(std::string_view player1, std::string_view player2) {
     player1Name = player1;
     player2Name = player2;
     clearGrid();
@@ -60,12 +53,12 @@ void GameModel::initializeStandardGame(const std::string& player1, const std::st
     currentPlayer = player1;
 }
 
-void GameModel::setCurrentPlayer(const std::string& player) {
+void GameModel::setCurrentPlayer(std::string_view player) noexcept {
     currentPlayer = player;
 }
 
 // Get current player's color
-std::string GameModel::getCurrentPlayer() const {
+std::string_view GameModel::getCurrentPlayer() const noexcept {
     return currentPlayer;
 }
 
@@ -79,7 +72,7 @@ void GameModel::initializeFromGrid(const std::vector<std::vector<std::unique_ptr
         for (int j = 0; j < BOARD_SIZE; j++) {
             if (initialGrid[i][j]) {
                 grid[i][j] = std::make_unique<Piece>(*initialGrid[i][j]);
-                uniquePlayers.insert(grid[i][j]->getColor());
+                uniquePlayers.insert(std::string{grid[i][j]->getColor()});
             }
         }
     }
@@ -168,7 +161,7 @@ std::vector<Move> GameModel::generatePionSimpleMoves(const Position& from) const
     for (int dy : {-1, 1}) {
         Position dest{from.x + forwardDirection, from.y + dy};
         if (isValidPosition(dest) && !grid[dest.x][dest.y]) {
-            Move move{from, {dest}, {}, piece->getColor()};
+            Move move{from, {dest}, {}, std::string{piece->getColor()}};
             moves.push_back(move);
         }
     }
@@ -184,7 +177,7 @@ std::vector<Move> GameModel::generateDameSimpleMoves(const Position& from) const
         for (int dist = 1; dist < BOARD_SIZE; ++dist) {
             Position dest{from.x + dist * dx, from.y + dist * dy};
             if (!isValidPosition(dest) || grid[dest.x][dest.y]) break;
-            Move move{from, {dest}, {}, piece->getColor()};
+            Move move{from, {dest}, {}, std::string{piece->getColor()}};
             moves.push_back(move);
         }
     }
@@ -227,7 +220,7 @@ void GameModel::generatePionCaptureSequences(const Position& from, const Positio
     }
     
     if (!foundCapture && !captured.empty()) {
-        Move move{from, path, captured, piece->getColor()};
+        Move move{from, path, captured, std::string{piece->getColor()}};
         allMoves.push_back(move);
     }
 }
@@ -275,7 +268,7 @@ void GameModel::generateDameCaptureSequences(const Position& from, const Positio
     }
     
     if (!foundCapture && !captured.empty()) {
-        Move move{from, path, captured, piece->getColor()};
+        Move move{from, path, captured, std::string{piece->getColor()}};
         allMoves.push_back(move);
     }
 }
@@ -351,16 +344,15 @@ void GameModel::checkPromotion(const Position& pos) {
     if (shouldPromote) piece->promote();
 }
 
-bool GameModel::isGameOver() const {
+bool GameModel::isGameOver() const noexcept {
     return getAllValidMoves().empty();
 }
 
-std::string GameModel::getWinner() const {
-    if (!isGameOver()) return "";
-    return getOpponent(currentPlayer);
+std::string_view GameModel::getWinner() const noexcept {
+    return isGameOver() ? getOpponent(currentPlayer) : std::string_view{};
 }
 
-int GameModel::getPieceCount(const std::string& player) const {
+int GameModel::getPieceCount(std::string_view player) const noexcept {
     int count = 0;
     for (const auto& row : grid) {
         for (const auto& piece : row) {
@@ -370,8 +362,8 @@ int GameModel::getPieceCount(const std::string& player) const {
     return count;
 }
 
-GameModel* GameModel::clone() const {
-    auto copy = new GameModel();
+std::unique_ptr<GameModel> GameModel::clone() const {
+    auto copy = std::make_unique<GameModel>();
     copy->currentPlayer = currentPlayer;
     copy->player1Name = player1Name;
     copy->player2Name = player2Name;
@@ -387,9 +379,6 @@ GameModel* GameModel::clone() const {
     }
     return copy;
 }
-
-// Default destructor
-GameModel::~GameModel() = default;
 
 // Overload to initialize from raw pointer grid
 void GameModel::initializeFromGrid(const std::vector<std::vector<Piece*>>& rawGrid) {
@@ -407,15 +396,15 @@ void GameModel::initializeFromGrid(const std::vector<std::vector<Piece*>>& rawGr
 }
 
 // Access move history
-const std::vector<Move>& GameModel::getMoveHistory() const {
+const std::vector<Move>& GameModel::getMoveHistory() const noexcept {
     return moveHistory;
 }
 
 // Provide access to the board grid as raw pointers
-std::vector<std::vector<Piece*>> GameModel::getBoard() const {
-    std::vector<std::vector<Piece*>> rawGrid(BOARD_SIZE, std::vector<Piece*>(BOARD_SIZE, nullptr));
-    for (int i = 0; i < BOARD_SIZE; ++i) {
-        for (int j = 0; j < BOARD_SIZE; ++j) {
+std::array<std::array<Piece*, GameModel::BOARD_SIZE>, GameModel::BOARD_SIZE> GameModel::getBoard() const noexcept {
+    std::array<std::array<Piece*, GameModel::BOARD_SIZE>, GameModel::BOARD_SIZE> rawGrid{};
+    for (size_t i = 0; i < GameModel::BOARD_SIZE; ++i) {
+        for (size_t j = 0; j < GameModel::BOARD_SIZE; ++j) {
             rawGrid[i][j] = grid[i][j].get();
         }
     }

@@ -1,60 +1,50 @@
 #pragma once
 #include "Piece.h"
+#include "Move.h"
 #include <vector>
 #include <memory>
 #include <map>
 #include <set>
-
-struct Move {
-    Position from;
-    std::vector<Position> path;
-    std::vector<Position> captured;
-    std::string playerColor;
-    // Returns true if this move captures at least one piece
-    bool isCapture() const { return !captured.empty(); }
-    // Returns the number of captured pieces
-    int captureCount() const { return static_cast<int>(captured.size()); }
-};
+#include <array>
+#include <string_view>
 
 class GameModel {
-    static constexpr int BOARD_SIZE = 8;
-    std::vector<std::vector<std::unique_ptr<Piece>>> grid;
+    inline static constexpr size_t BOARD_SIZE = 8;
+    std::array<std::array<std::unique_ptr<Piece>, BOARD_SIZE>, BOARD_SIZE> grid{};
     std::string currentPlayer;
     std::string player1Name;
     std::string player2Name;
     std::vector<Move> moveHistory;
     
 public:
-    GameModel();
+    GameModel() = default;
     // Destructor
-    ~GameModel();
-    void initializeStandardGame(const std::string& player1, const std::string& player2);
+    ~GameModel() = default;
+    void initializeStandardGame(std::string_view player1, std::string_view player2);
     void initializeFromGrid(const std::vector<std::vector<std::unique_ptr<Piece>>>& initialGrid);
     // Overload to initialize from raw pointer grid
     void initializeFromGrid(const std::vector<std::vector<Piece*>>& rawGrid);
-    void setCurrentPlayer(const std::string& player);
+    void setCurrentPlayer(std::string_view player) noexcept;
     // Getter for current player's color
-    std::string getCurrentPlayer() const;
+    [[nodiscard]] std::string_view getCurrentPlayer() const noexcept;
     // Get a copy of the board as raw pointers for readonly access
-    std::vector<std::vector<Piece*>> getBoard() const;
-    std::vector<Move> getValidMoves(const Position& piecePos) const;
-    std::map<Position, std::vector<Move>> getAllValidMoves() const;
+    [[nodiscard]] std::array<std::array<Piece*, BOARD_SIZE>, BOARD_SIZE> getBoard() const noexcept;
+    [[nodiscard]] std::vector<Move> getValidMoves(const Position& piecePos) const;
+    [[nodiscard]] std::map<Position, std::vector<Move>> getAllValidMoves() const;
     void executeMove(const Move& move);
-    bool isGameOver() const;
-    std::string getWinner() const;
-    int getPieceCount(const std::string& player) const;
-    // Clone model (caller takes ownership and should delete)
-    GameModel* clone() const;
-    // Access move history
-    const std::vector<Move>& getMoveHistory() const;
+    [[nodiscard]] bool isGameOver() const noexcept;
+    [[nodiscard]] std::string_view getWinner() const noexcept;
+    [[nodiscard]] int getPieceCount(std::string_view player) const noexcept;
+    [[nodiscard]] std::unique_ptr<GameModel> clone() const;
+    [[nodiscard]] const std::vector<Move>& getMoveHistory() const noexcept;
 
 private:
     void clearGrid();
-    bool isValidPosition(const Position& pos) const;
+    static constexpr bool isValidPosition(const Position& pos) noexcept;
     bool canAnyPieceCapture() const;
-    bool isPlayer1(const std::string& player) const;
-    bool isPlayer2(const std::string& player) const;
-    std::string getOpponent(const std::string& player) const;
+    bool isPlayer1(std::string_view player) const noexcept;
+    bool isPlayer2(std::string_view player) const noexcept;
+    std::string_view getOpponent(std::string_view player) const noexcept;
     
     // Move generation helpers
     std::vector<Move> generatePionSimpleMoves(const Position& from) const;
