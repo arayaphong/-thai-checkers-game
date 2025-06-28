@@ -54,13 +54,13 @@ int main(int argc, char* argv[]) {
 
         // Print all valid moves
         for (const auto& [pos, moves] : allMoves) {
-            std::cout << "From " << char('A' + pos.y) << pos.x + 1 << ": ";
+            std::cout << "From " << pos.toString() << ": ";
             for (size_t i = 0; i < moves.size(); ++i) {
                 const auto& m = moves[i];
                 std::cout << "(";
                 for (size_t j = 0; j < m.path.size(); ++j) {
                     const auto& p = m.path[j];
-                    std::cout << char('A' + p.y) << p.x + 1;
+                    std::cout << p.toString();
                     if (j + 1 < m.path.size()) std::cout << "->";
                 }
                 std::cout << ")";
@@ -73,8 +73,8 @@ int main(int argc, char* argv[]) {
         const Move& move = allMoves.begin()->second.front();
         
         std::cout << "Executing move from: "
-                  << char('A' + move.from.y) << move.from.x + 1 << " -> "
-                  << char('A' + move.path.back().y) << move.path.back().x +1 << std::endl;
+                  << move.from.toString() << " -> "
+                  << move.path.back().toString() << std::endl;
 
         game.executeMove(move);
         std::cout << "-------------------------" << std::endl;

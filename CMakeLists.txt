@@ -5,6 +5,17 @@ project(ThaiCheckers)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# If no build type is specified, default to Release for O3 optimization
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type (Debug/Release)" FORCE)
+endif()
+
+# Add O3 flags for Release configuration
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
+
+# Add debug flags for Debug configuration
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0")
+
 # Option for code coverage
 option(CODE_COVERAGE "Enable coverage reporting" ON)
 # Find gcovr executable for coverage reporting
