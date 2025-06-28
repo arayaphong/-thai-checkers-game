@@ -133,20 +133,33 @@ public:
         std::cout << std::format("Types:     {:032b}\n", getTypeEncoding());
         std::cout << std::format("Pieces: {}\n\n", getPieceCount());
         std::cout << "Board layout:\n";
-        for (int row = 3; row >= 0; row--) {
-            for (int col = 0; col < 8; col++) {
-                int pos = row * 8 + col;
-                auto piece = getPiece(pos);
-                
-                char symbol = '.';
-                if (piece.has_value()) {
-                    using enum PieceType;
-                    switch (piece.value()) {
-                        case WHITE_PION: symbol = 'P'; break;
-                        case WHITE_DAME: symbol = 'D'; break;
-                        case BLACK_PION: symbol = 'p'; break;
-                        case BLACK_DAME: symbol = 'd'; break;
+        // Column indices header
+        std::cout << "   ";
+        for (int col = 0; col < 8; ++col) {
+            std::cout << col << " ";
+        }
+        std::cout << "\n";
+        int p = 0;
+        // Iterate displayRow 0..7 top-down
+        for (int displayRow = 0; displayRow < 8; ++displayRow) {
+            int row = 7 - displayRow;
+            // Row index label (0..7 top-down)
+            std::cout << " " << displayRow << " ";
+            for (int col = 0; col < 8; ++col) {
+                std::string symbol = " ";
+                if ((row + col) % 2 == 1) {
+                    auto piece = getPiece(p);
+                    symbol = ".";
+                    if (piece.has_value()) {
+                        using enum PieceType;
+                        switch (piece.value()) {
+                            case WHITE_PION: symbol = "●"; break;
+                            case WHITE_DAME: symbol = "♛"; break;
+                            case BLACK_PION: symbol = "○"; break;
+                            case BLACK_DAME: symbol = "♕"; break;
+                        }
                     }
+                    ++p;
                 }
                 std::cout << symbol << " ";
             }
