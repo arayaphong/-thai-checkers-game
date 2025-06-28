@@ -17,31 +17,22 @@ void GameSimulator::simulateRecursive(std::unique_ptr<GameModel> model, int dept
     if (model->isGameOver() || allMoves.empty()) {
         // Leaf: print final state, hash and wait
         ++scenarioCount_;
-        std::cout << "\n=== Scenario " << scenarioCount_ << " ===" << std::endl;
-        // Print stage reset per scenario
-        std::cout << "Stage: " << depth << std::endl;
+        std::cout << "Scenario " << scenarioCount_ << std::endl;
+        // Print number of moves made in this scenario path
+        std::cout << "Moved: " << depth << std::endl;
         if (model->getWinner() != "")
             std::cout << "Winner: " << model->getWinner() << std::endl;
-        else
-            std::cout << "It's a draw!" << std::endl;
+        else {
+            if (model->isInsufficientMaterial()) {
+                std::cout << "It's a draw!" << std::endl;
+            }
+        }
         // Print board
         const auto& board = model->getBoard();
         printBoardGrid(board);
-        // Hash move sequence
-        std::stringstream ss;
-        for (const auto& mv : model->getMoveHistory()) {
-            ss << mv.from.toString() << "->" << mv.path.back().toString() << ";";
-        }
-        size_t hash = std::hash<std::string>()(ss.str());
-        // format hash into 4 hex groups of 16 bits
-        std::ostringstream hoss;
-        hoss << std::hex << std::uppercase << std::setfill('0')
-             << std::setw(4) << ((hash >> 48) & 0xFFFF) << '-'
-             << std::setw(4) << ((hash >> 32) & 0xFFFF) << '-'
-             << std::setw(4) << ((hash >> 16) & 0xFFFF) << '-'
-             << std::setw(4) << (hash & 0xFFFF);
-        std::cout << "Scenario hash: " << hoss.str() << std::endl;
         onGameOver();
+
+        std::cout << "__________________\n\n";
         // std::cout << "Press Enter to continue..." << std::endl;
         // std::cin.get();
         return;

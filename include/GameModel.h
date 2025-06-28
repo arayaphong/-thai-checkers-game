@@ -10,7 +10,7 @@
 
 class GameModel {
     inline static constexpr size_t BOARD_SIZE = 8;
-    inline static constexpr size_t MAX_MOVES = 200; // Maximum moves to prevent infinite games
+    inline static constexpr size_t MAX_HISTORY_SIZE = 20; // Keep last 20 positions for draw detection
     std::array<std::array<std::unique_ptr<Piece>, BOARD_SIZE>, BOARD_SIZE> grid{};
     std::string currentPlayer;
     std::string player1Name;
@@ -37,7 +37,7 @@ public:
     [[nodiscard]] std::string_view getWinner() const noexcept;
     [[nodiscard]] int getPieceCount(std::string_view player) const noexcept;
     [[nodiscard]] std::unique_ptr<GameModel> clone() const;
-    [[nodiscard]] const std::vector<Move>& getMoveHistory() const noexcept;
+    [[nodiscard]] bool isInsufficientMaterial() const noexcept;
 
 private:
     void clearGrid();

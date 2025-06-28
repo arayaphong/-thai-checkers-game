@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <array>
 #include <stack>
+#include <sstream>
 
 namespace {
 inline constexpr std::array<std::pair<int, int>, 4> DIAGONAL_DIRECTIONS{{{1, 1}, {1, -1}, {-1, 1}, {-1, -1}}};
@@ -345,16 +346,20 @@ void GameModel::checkPromotion(const Position& pos) {
 }
 
 bool GameModel::isGameOver() const noexcept {
-    // Game ends if no valid moves available OR max moves reached
-    return getAllValidMoves().empty() || moveHistory.size() >= MAX_MOVES;
+    // Game ends if a player has no pieces, no valid moves available, position is repeated, or insufficient material
+    if (getPieceCount(player1Name) == 0 || getPieceCount(player2Name) == 0) return true;
+    return getAllValidMoves().empty() || isInsufficientMaterial();
 }
 
 std::string_view GameModel::getWinner() const noexcept {
     if (!isGameOver()) return std::string_view{};
+    // If a player has no pieces, the other wins
+    if (getPieceCount(player1Name) == 0) return player2Name;
+    if (getPieceCount(player2Name) == 0) return player1Name;
     
-    // If max moves reached, it's a draw
-    if (moveHistory.size() >= MAX_MOVES) return std::string_view{};
-    
+    // If insufficient material, it's a draw
+    if (isInsufficientMaterial()) return std::string_view{};
+
     // Otherwise, winner is the opponent of the player who can't move
     return getOpponent(currentPlayer);
 }
@@ -402,11 +407,6 @@ void GameModel::initializeFromGrid(const std::vector<std::vector<Piece*>>& rawGr
     initializeFromGrid(initialGrid);
 }
 
-// Access move history
-const std::vector<Move>& GameModel::getMoveHistory() const noexcept {
-    return moveHistory;
-}
-
 // Provide access to the board grid as raw pointers
 std::array<std::array<Piece*, GameModel::BOARD_SIZE>, GameModel::BOARD_SIZE> GameModel::getBoard() const noexcept {
     std::array<std::array<Piece*, GameModel::BOARD_SIZE>, GameModel::BOARD_SIZE> rawGrid{};
@@ -416,4 +416,28 @@ std::array<std::array<Piece*, GameModel::BOARD_SIZE>, GameModel::BOARD_SIZE> Gam
         }
     }
     return rawGrid;
+}
+
+bool GameModel::isInsufficientMaterial() const noexcept {
+    // Count pieces for each player
+    int player1Count = 0, player2Count = 0;
+    int player1Dames = 0, player2Dames = 0;
+    
+    for (const auto& row : grid) {
+        for (const auto& piece : row) {
+            if (piece) {
+                if (piece->getColor() == player1Name) {
+                    player1Count++;
+                    if (piece->isDame()) player1Dames++;
+                } else if (piece->getColor() == player2Name) {
+                    player2Count++;
+                    if (piece->isDame()) player2Dames++;
+                }
+            }
+        }
+    }
+    
+    // Draw if only two dames left (one for each player)
+    return (player1Count == 1 && player2Count == 1 && 
+            player1Dames == 1 && player2Dames == 1);
 }

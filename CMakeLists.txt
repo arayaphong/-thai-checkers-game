@@ -73,7 +73,7 @@ if(CODE_COVERAGE AND GCOVR_EXECUTABLE)
         COMMAND ${CMAKE_COMMAND} -E rm -rf coverage_html
         COMMAND ${CMAKE_COMMAND} -E make_directory coverage_html/v1
         COMMAND ${CMAKE_COMMAND} -E chdir ${CMAKE_BINARY_DIR} ctest
-        COMMAND ${GCOVR_EXECUTABLE} -r ${CMAKE_SOURCE_DIR} --html --html-details -o coverage_html/v1/index.html --filter include/GameModel.h --filter include/Move.h --filter include/Piece.h --filter include/Position.h --filter src/Board.cpp --filter src/GameModel.cpp --filter src/Piece.cpp --exclude src/main.cpp --gcov-ignore-errors=no_working_dir_found
+        COMMAND ${GCOVR_EXECUTABLE} -r ${CMAKE_SOURCE_DIR} --html --html-details -o coverage_html/v1/index.html --merge-mode-functions=merge-use-line-max --filter include/GameModel.h --filter include/Move.h --filter include/Piece.h --filter include/Position.h --filter src/Board.cpp --filter src/GameModel.cpp --filter src/Piece.cpp --exclude src/main.cpp --gcov-ignore-errors=no_working_dir_found
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Generating code coverage report in coverage_html/v1/index.html (filtered)"
     )
