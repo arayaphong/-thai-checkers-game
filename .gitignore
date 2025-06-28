@@ -23,5 +23,5 @@ ThaiCheckers
 .vscode/
 .DS_Store
 
-# Ignore all directories beginning with "build"
-build*/
+# Ignore all directories beginning with "build" (any level)
+**/build*/
