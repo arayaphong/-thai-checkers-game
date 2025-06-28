@@ -135,7 +135,7 @@ public:
         std::cout << "Board layout:\n";
         // Column indices header
         std::cout << "   ";
-        for (int col = 0; col < 8; ++col) {
+        for (char col = 'A'; col <= 'H'; ++col) {
             std::cout << col << " ";
         }
         std::cout << "\n";
@@ -144,7 +144,7 @@ public:
         for (int displayRow = 0; displayRow < 8; ++displayRow) {
             int row = 7 - displayRow;
             // Row index label (0..7 top-down)
-            std::cout << " " << displayRow << " ";
+            std::cout << " " << displayRow + 1 << " ";
             for (int col = 0; col < 8; ++col) {
                 std::string symbol = " ";
                 if ((row + col) % 2 == 1) {
@@ -154,9 +154,9 @@ public:
                         using enum PieceType;
                         switch (piece.value()) {
                             case WHITE_PION: symbol = "●"; break;
-                            case WHITE_DAME: symbol = "♛"; break;
+                            case WHITE_DAME: symbol = "▲"; break;
                             case BLACK_PION: symbol = "○"; break;
-                            case BLACK_DAME: symbol = "♕"; break;
+                            case BLACK_DAME: symbol = "△"; break;
                         }
                     }
                     ++p;
