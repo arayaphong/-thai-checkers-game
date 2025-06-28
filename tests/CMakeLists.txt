@@ -29,6 +29,13 @@ add_test(NAME GameModelTests COMMAND ThaiCheckersTests)
 add_test(NAME GameScenarioTests COMMAND ThaiCheckersTests)
 # Removed StatesTest
 
+# Find gcovr for code coverage
+find_program(GCOVR_EXECUTABLE NAMES gcovr)
+if(CODE_COVERAGE AND NOT GCOVR_EXECUTABLE)
+    message(WARNING "gcovr not found, disabling code coverage")
+    set(CODE_COVERAGE OFF CACHE BOOL "Enable coverage reporting" FORCE)
+endif()
+
 # Automatically generate coverage report after tests if CODE_COVERAGE is ON
 if(CODE_COVERAGE)
     add_custom_command(
@@ -36,4 +43,6 @@ if(CODE_COVERAGE)
         COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target coverage
         COMMENT "Automatically generating code coverage report after tests (CODE_COVERAGE=ON)"
     )
+else()
+    message(STATUS "Coverage post-build disabled due to CODE_COVERAGE=OFF")
 endif()

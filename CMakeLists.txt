@@ -2,11 +2,19 @@ cmake_minimum_required(VERSION 3.14)
 
 project(ThaiCheckers)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Option for code coverage
 option(CODE_COVERAGE "Enable coverage reporting" ON)
+# Find gcovr executable for coverage reporting
+find_program(GCOVR_EXECUTABLE NAMES gcovr)
+# Disable coverage if gcovr is missing
+if(CODE_COVERAGE AND NOT GCOVR_EXECUTABLE)
+    message(WARNING "gcovr not found, disabling code coverage")
+    set(CODE_COVERAGE OFF CACHE BOOL "Enable coverage reporting" FORCE)
+endif()
+# Apply coverage flags if enabled
 if(CODE_COVERAGE)
     message(STATUS "Building with code coverage flags")
     add_compile_options(--coverage -O0 -g)
@@ -46,12 +54,14 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 add_subdirectory(tests)
 
-# Custom target to automate coverage
-add_custom_target(coverage
-    COMMAND ${CMAKE_COMMAND} -E rm -rf coverage_html
-    COMMAND ${CMAKE_COMMAND} -E make_directory coverage_html/v1
-    COMMAND ${CMAKE_COMMAND} -E chdir ${CMAKE_BINARY_DIR} ctest
-    COMMAND gcovr -r ${CMAKE_SOURCE_DIR} --html --html-details -o coverage_html/v1/index.html --filter include/GameModel.h --filter include/Move.h --filter include/Piece.h --filter include/Position.h --filter src/Board.cpp --filter src/GameModel.cpp --filter src/Piece.cpp
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    COMMENT "Generating code coverage report in coverage_html/v1/index.html (filtered)"
-)
+# Custom target to automate coverage (only if gcovr was found)
+if(CODE_COVERAGE AND GCOVR_EXECUTABLE)
+    add_custom_target(coverage
+        COMMAND ${CMAKE_COMMAND} -E rm -rf coverage_html
+        COMMAND ${CMAKE_COMMAND} -E make_directory coverage_html/v1
+        COMMAND ${CMAKE_COMMAND} -E chdir ${CMAKE_BINARY_DIR} ctest
+        COMMAND ${GCOVR_EXECUTABLE} -r ${CMAKE_SOURCE_DIR} --html --html-details -o coverage_html/v1/index.html --filter include/GameModel.h --filter include/Move.h --filter include/Piece.h --filter include/Position.h --filter src/Board.cpp --filter src/GameModel.cpp --filter src/Piece.cpp --exclude src/main.cpp --gcov-ignore-errors=no_working_dir_found
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Generating code coverage report in coverage_html/v1/index.html (filtered)"
+    )
+endif()
