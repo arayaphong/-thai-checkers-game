@@ -1,5 +1,4 @@
 # Build directories and files
-/build/
 lib/
 bin/
 coverage_html/
@@ -23,3 +22,6 @@ ThaiCheckers
 # IDE and OS-specific files
 .vscode/
 .DS_Store
+
+# Ignore all directories beginning with "build"
+build*/
