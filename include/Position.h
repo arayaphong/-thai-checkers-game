@@ -1,5 +1,4 @@
-#ifndef POSITION_H
-#define POSITION_H
+#pragma once
 
 #include <string>
 
@@ -26,4 +25,3 @@ struct Position {
     }
 };
 
-#endif // POSITION_H

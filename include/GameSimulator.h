@@ -1,5 +1,4 @@
-#ifndef GAMESIMULATOR_H
-#define GAMESIMULATOR_H
+#pragma once
 
 #include "GameModel.h"
 #include "Move.h"
@@ -28,4 +27,3 @@ protected:
     static void printBoardGrid(const std::array<std::array<Piece*, 8>, 8>& board);
 };
 
-#endif // GAMESIMULATOR_H

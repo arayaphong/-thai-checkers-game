@@ -1,5 +1,4 @@
-#ifndef GAMESCENARIO_H
-#define GAMESCENARIO_H
+#pragma once
 
 #include "GameSimulator.h"
 #include <map>
@@ -19,4 +18,3 @@ private:
     // custom scenario state if needed
 };
 
-#endif // GAMESCENARIO_H

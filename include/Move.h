@@ -1,5 +1,4 @@
-#ifndef MOVE_H
-#define MOVE_H
+#pragma once
 
 #include <vector>
 #include "Position.h"
@@ -15,4 +14,3 @@ struct Move {
     [[nodiscard]] int captureCount() const noexcept { return static_cast<int>(captured.size()); }
 };
 
-#endif // MOVE_H
