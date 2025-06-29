@@ -37,7 +37,6 @@ public:
     [[nodiscard]] std::string_view getWinner() const noexcept;
     [[nodiscard]] int getPieceCount(std::string_view player) const noexcept;
     [[nodiscard]] std::unique_ptr<GameModel> clone() const;
-    [[nodiscard]] bool isInsufficientMaterial() const noexcept;
 
 private:
     void clearGrid();
