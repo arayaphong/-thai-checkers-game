@@ -39,7 +39,7 @@ include_directories(include)
 set(LIB_SOURCES
     src/Board.cpp
     src/Piece.cpp
-    src/GameModel.cpp  # Add new GameModel
+    src/GameModel.cpp
     src/GameSimulator.cpp
     src/GameScenario.cpp
 )
