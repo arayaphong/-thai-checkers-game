@@ -23,7 +23,7 @@ void printBoard(const std::array<std::array<Piece*, 8>, 8>& board) {
                 symbol = ".";
             }
             if (board[i][j]) {
-                if (board[i][j]->getColor() == "White") {
+                if (!board[i][j]->isBlackPiece()) {
                     symbol = board[i][j]->isDame() ? "■" : "●";
                 } else { // Black
                     symbol = board[i][j]->isDame() ? "□" : "○";

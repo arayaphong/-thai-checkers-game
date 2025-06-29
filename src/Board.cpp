@@ -17,9 +17,9 @@ void Board::initialize(const std::vector<std::vector<std::unique_ptr<Piece>>>& i
     model = ownedModel.get();
 }
 
-void Board::initialize(std::string_view p1, std::string_view p2) {
+void Board::initialize() {
     ownedModel = std::make_unique<GameModel>();
-    ownedModel->initializeStandardGame(p1, p2);
+    ownedModel->initializeStandardGame();
     model = ownedModel.get();
 }
 
@@ -41,28 +41,14 @@ void Board::initialize(const std::vector<std::vector<Piece*>>& rawGrid) {
     model = ownedModel.get();
 }
 
-void Board::setTurn(std::string_view color) noexcept {
-    if (model) model->setCurrentPlayer(color);
+void Board::setTurn(bool isBlack) noexcept {
+    if (model) model->setCurrentPlayer(isBlack);
 }
 
 void Board::display() const {
     if (!model) return;
     
     const auto& grid = model->getBoard();
-    
-    // Get all unique player colors to determine symbols
-    std::set<std::string_view> playerColors;
-    for (int i = 0; i < 8; ++i) {
-        for (int j = 0; j < 8; ++j) {
-            if (grid[i][j]) {
-                playerColors.insert(grid[i][j]->getColor());
-            }
-        }
-    }
-    
-    // Convert to vector for consistent ordering
-    std::vector<std::string_view> players(playerColors.begin(), playerColors.end());
-    std::sort(players.begin(), players.end()); // Consistent ordering
     
     // Print column indices
     std::cout << "  ";
@@ -78,12 +64,10 @@ void Board::display() const {
             if (piece) {
                 // Determine symbol based on piece color and type
                 const char* symbol;
-                bool isFirstPlayer = !players.empty() && piece->getColor() == players[0];
-                
                 if (piece->isDame()) {
-                    symbol = isFirstPlayer ? "♛" : "♕";
+                    symbol = piece->isBlackPiece() ? "♛" : "♕";
                 } else {
-                    symbol = isFirstPlayer ? "●" : "○";
+                    symbol = piece->isBlackPiece() ? "●" : "○";
                 }
                 std::cout << symbol << " ";
             } else {
@@ -128,6 +112,6 @@ std::vector<std::unique_ptr<Piece>> Board::getMoveablePieces() const {
     return moveablePieces;
 }
 
-std::string_view Board::getCurrentPlayer() const {
-    return model ? model->getCurrentPlayer() : std::string_view{};
+bool Board::isBlacksTurn() const {
+    return model ? model->isBlacksTurnFunc() : false;
 }

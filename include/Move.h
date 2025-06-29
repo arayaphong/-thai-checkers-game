@@ -9,7 +9,7 @@ struct Move {
     Position from;
     std::vector<Position> path;
     std::vector<Position> captured;
-    std::string playerColor;
+    bool isBlack;
 
     [[nodiscard]] bool isCapture() const noexcept { return !captured.empty(); }
     [[nodiscard]] int captureCount() const noexcept { return static_cast<int>(captured.size()); }

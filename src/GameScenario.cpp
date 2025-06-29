@@ -3,7 +3,7 @@
 GameScenario::GameScenario() {}
 
 void GameScenario::initializeGame() {
-    game.initializeStandardGame("White", "Black");
+    game.initializeStandardGame();
 }
 
 Move GameScenario::selectMove(const std::map<Position, std::vector<Move>>& allMoves) {

@@ -11,7 +11,7 @@ protected:
 
 // Basic Move and Capture Tests
 TEST_F(GameLogicTests, InitializeStandardGame) {
-    model.initializeStandardGame("Player1", "Player2");
+    model.initializeStandardGame();
     
     auto board = model.getBoard();
     
@@ -19,7 +19,7 @@ TEST_F(GameLogicTests, InitializeStandardGame) {
     int player1Count = 0;
     for (int i = 0; i < 3; ++i) {  // Player1 is at top (rows 0-2)
         for (int j = 0; j < 8; ++j) {
-            if (board[i][j] && board[i][j]->getColor() == "Player1") {
+            if (board[i][j] && board[i][j]->isBlackPiece()) {
                 player1Count++;
             }
         }
@@ -30,19 +30,19 @@ TEST_F(GameLogicTests, InitializeStandardGame) {
     int player2Count = 0;
     for (int i = 6; i < 8; ++i) {  // Player2 is at bottom (rows 6-7)
         for (int j = 0; j < 8; ++j) {
-            if (board[i][j] && board[i][j]->getColor() == "Player2") {
+            if (board[i][j] && !board[i][j]->isBlackPiece()) {
                 player2Count++;
             }
         }
     }
     EXPECT_EQ(player2Count, 8);  // Standard checkers has 8 pieces per player
     
-    EXPECT_EQ(model.getCurrentPlayer(), "Player1");
+    EXPECT_TRUE(model.isBlacksTurnFunc());
 }
 
 TEST_F(GameLogicTests, SimpleMove) {
     std::vector<std::vector<Piece*>> grid(8, std::vector<Piece*>(8, nullptr));
-    grid[3][3] = new Piece("Player1", {3, 3});
+    grid[3][3] = new Piece(true, {3, 3});
     model.initializeFromGrid(grid);
     
     auto moves = model.getValidMoves({3, 3});
@@ -60,8 +60,8 @@ TEST_F(GameLogicTests, SimpleMove) {
 
 TEST_F(GameLogicTests, CaptureMove) {
     std::vector<std::vector<Piece*>> grid(8, std::vector<Piece*>(8, nullptr));
-    grid[2][2] = new Piece("Player1", {2, 2});  // Player1 at top, can move down
-    grid[3][3] = new Piece("Player2", {3, 3});  // Player2 diagonally below Player1
+    grid[2][2] = new Piece(true, {2, 2});  // Player1 at top, can move down
+    grid[3][3] = new Piece(false, {3, 3});  // Player2 diagonally below Player1
     model.initializeFromGrid(grid);
     
     auto moves = model.getValidMoves({2, 2});
@@ -75,8 +75,8 @@ TEST_F(GameLogicTests, CaptureMove) {
 
 TEST_F(GameLogicTests, ExecuteMove) {
     std::vector<std::vector<Piece*>> grid(8, std::vector<Piece*>(8, nullptr));
-    grid[2][2] = new Piece("Player1", {2, 2});
-    grid[3][3] = new Piece("Player2", {3, 3});
+    grid[2][2] = new Piece(true, {2, 2});
+    grid[3][3] = new Piece(false, {3, 3});
     model.initializeFromGrid(grid);
     
     auto moves = model.getValidMoves({2, 2});
@@ -88,15 +88,15 @@ TEST_F(GameLogicTests, ExecuteMove) {
     EXPECT_EQ(board[2][2], nullptr);
     EXPECT_EQ(board[3][3], nullptr); // Captured
     EXPECT_NE(board[4][4], nullptr);
-    EXPECT_EQ(board[4][4]->getColor(), "Player1");
-    EXPECT_EQ(model.getCurrentPlayer(), "Player2");
+    EXPECT_TRUE(board[4][4]->isBlackPiece());
+    EXPECT_FALSE(model.isBlacksTurnFunc());
 }
 
 TEST_F(GameLogicTests, MultipleCaptures) {
     std::vector<std::vector<Piece*>> grid(8, std::vector<Piece*>(8, nullptr));
-    grid[2][2] = new Piece("Player1", {2, 2});  // Player1 starting position
-    grid[3][3] = new Piece("Player2", {3, 3});  // First capture target
-    grid[5][5] = new Piece("Player2", {5, 5});  // Second capture target
+    grid[2][2] = new Piece(true, {2, 2});  // Player1 starting position
+    grid[3][3] = new Piece(false, {3, 3});  // First capture target
+    grid[5][5] = new Piece(false, {5, 5});  // Second capture target
     model.initializeFromGrid(grid);
     
     auto moves = model.getValidMoves({2, 2});
@@ -108,18 +108,18 @@ TEST_F(GameLogicTests, MultipleCaptures) {
 // Game State Tests
 TEST_F(GameLogicTests, GameOver) {
     std::vector<std::vector<Piece*>> grid(8, std::vector<Piece*>(8, nullptr));
-    grid[7][7] = new Piece("Player1", {7, 7});  // Player1 at bottom corner (blocked)
-    grid[0][0] = new Piece("Player2", {0, 0});  // Player2 at top corner (blocked)
+    grid[7][7] = new Piece(true, {7, 7});  // Player1 at bottom corner (blocked)
+    grid[0][0] = new Piece(false, {0, 0});  // Player2 at top corner (blocked)
     model.initializeFromGrid(grid);
     
     // Player1 at bottom corner cannot move forward
     EXPECT_TRUE(model.isGameOver());
-    EXPECT_EQ(model.getWinner(), "Player2");
+    EXPECT_FALSE(model.isBlacksTurnFunc());
 }
 
 TEST_F(GameLogicTests, CloneModel) {
     std::vector<std::vector<Piece*>> grid(8, std::vector<Piece*>(8, nullptr));
-    grid[3][3] = new Piece("Player1", {3, 3});
+    grid[3][3] = new Piece(true, {3, 3});
     model.initializeFromGrid(grid);
     
     auto clone = model.clone();
@@ -129,7 +129,7 @@ TEST_F(GameLogicTests, CloneModel) {
     auto cloneBoard = clone->getBoard();
     
     EXPECT_NE(origBoard[3][3], cloneBoard[3][3]); // Different pointers
-    EXPECT_EQ(cloneBoard[3][3]->getColor(), "Player1");
+    EXPECT_TRUE(cloneBoard[3][3]->isBlackPiece());
     EXPECT_EQ(cloneBoard[3][3]->getPosition().x, 3);
     EXPECT_EQ(cloneBoard[3][3]->getPosition().y, 3);
     
@@ -139,7 +139,7 @@ TEST_F(GameLogicTests, CloneModel) {
 // Dame (King) Piece Tests
 TEST_F(GameLogicTests, DamePromotion) {
     std::vector<std::vector<Piece*>> grid(8, std::vector<Piece*>(8, nullptr));
-    grid[6][6] = new Piece("Player1", {6, 6});  // Near promotion row for Player1
+    grid[6][6] = new Piece(true, {6, 6});  // Near promotion row for Player1
     model.initializeFromGrid(grid);
     
     // Move to promotion row
@@ -163,7 +163,7 @@ TEST_F(GameLogicTests, DamePromotion) {
 
 TEST_F(GameLogicTests, DameSimpleMove) {
     std::vector<std::vector<Piece*>> grid(8, std::vector<Piece*>(8, nullptr));
-    grid[4][4] = new Piece("Player1", {4, 4});
+    grid[4][4] = new Piece(true, {4, 4});
     grid[4][4]->promote();  // Make it a Dame
     model.initializeFromGrid(grid);
     
@@ -192,10 +192,10 @@ TEST_F(GameLogicTests, DameSimpleMove) {
 
 TEST_F(GameLogicTests, DameMultiCapture) {
     std::vector<std::vector<Piece*>> grid(8, std::vector<Piece*>(8, nullptr));
-    grid[1][1] = new Piece("Player1", {1, 1});
+    grid[1][1] = new Piece(true, {1, 1});
     grid[1][1]->promote();  // Make it a Dame
-    grid[2][2] = new Piece("Player2", {2, 2});      // Enemy piece
-    grid[4][4] = new Piece("Player2", {4, 4});      // Another enemy piece
+    grid[2][2] = new Piece(false, {2, 2});      // Enemy piece
+    grid[4][4] = new Piece(false, {4, 4});      // Another enemy piece
     model.initializeFromGrid(grid);
     
     auto moves = model.getValidMoves({1, 1});
@@ -213,9 +213,9 @@ TEST_F(GameLogicTests, DameMultiCapture) {
 
 TEST_F(GameLogicTests, DameFlexibleLanding) {
     std::vector<std::vector<Piece*>> grid(8, std::vector<Piece*>(8, nullptr));
-    grid[2][2] = new Piece("Player1", {2, 2});
+    grid[2][2] = new Piece(true, {2, 2});
     grid[2][2]->promote();  // Make it a Dame
-    grid[3][3] = new Piece("Player2", {3, 3});      // Enemy piece to capture
+    grid[3][3] = new Piece(false, {3, 3});      // Enemy piece to capture
     model.initializeFromGrid(grid);
     
     auto moves = model.getValidMoves({2, 2});

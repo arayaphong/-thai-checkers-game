@@ -12,39 +12,36 @@ class GameModel {
     inline static constexpr size_t BOARD_SIZE = 8;
     inline static constexpr size_t MAX_HISTORY_SIZE = 20; // Keep last 20 positions for draw detection
     std::array<std::array<std::unique_ptr<Piece>, BOARD_SIZE>, BOARD_SIZE> grid{};
-    std::string currentPlayer;
-    std::string player1Name;
-    std::string player2Name;
+    bool isBlacksTurn = true; // Black moves first
     std::vector<Move> moveHistory;
     
 public:
     GameModel() = default;
     // Destructor
     ~GameModel() = default;
-    void initializeStandardGame(std::string_view player1, std::string_view player2);
+    void initializeStandardGame();
     void initializeFromGrid(const std::vector<std::vector<std::unique_ptr<Piece>>>& initialGrid);
     // Overload to initialize from raw pointer grid
     void initializeFromGrid(const std::vector<std::vector<Piece*>>& rawGrid);
-    void setCurrentPlayer(std::string_view player) noexcept;
+    void setCurrentPlayer(bool isBlack) noexcept;
     // Getter for current player's color
-    [[nodiscard]] std::string_view getCurrentPlayer() const noexcept;
+    [[nodiscard]] bool isBlacksTurnFunc() const noexcept;
     // Get a copy of the board as raw pointers for readonly access
     [[nodiscard]] std::array<std::array<Piece*, BOARD_SIZE>, BOARD_SIZE> getBoard() const noexcept;
     [[nodiscard]] std::vector<Move> getValidMoves(const Position& piecePos) const;
     [[nodiscard]] std::map<Position, std::vector<Move>> getAllValidMoves() const;
+    [[nodiscard]] std::map<Position, std::vector<Move>> getValidMovesForPlayer(bool isBlack) const;
     void executeMove(const Move& move);
     [[nodiscard]] bool isGameOver() const noexcept;
-    [[nodiscard]] std::string_view getWinner() const noexcept;
-    [[nodiscard]] int getPieceCount(std::string_view player) const noexcept;
+    [[nodiscard]] std::string getWinner() const noexcept;
+    [[nodiscard]] int getPieceCount(bool isBlack) const noexcept;
     [[nodiscard]] std::unique_ptr<GameModel> clone() const;
 
 private:
     void clearGrid();
     static constexpr bool isValidPosition(const Position& pos) noexcept;
     bool canAnyPieceCapture() const;
-    bool isPlayer1(std::string_view player) const noexcept;
-    bool isPlayer2(std::string_view player) const noexcept;
-    std::string_view getOpponent(std::string_view player) const noexcept;
+    bool getOpponent() const noexcept;
     
     // Move generation helpers
     std::vector<Move> generatePionSimpleMoves(const Position& from) const;

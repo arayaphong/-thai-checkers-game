@@ -58,7 +58,7 @@ void GameSimulator::printBoardGrid(const std::array<std::array<Piece*, 8>, 8>& b
             std::string symbol = " ";
             if ((i + j) % 2 == 1) symbol = ".";
             if (board[i][j]) {
-                if (board[i][j]->getColor() == "White") {
+                if (!board[i][j]->isBlackPiece()) {
                     symbol = board[i][j]->isDame() ? "■" : "●";
                 } else {
                     symbol = board[i][j]->isDame() ? "□" : "○";

@@ -11,7 +11,7 @@ protected:
 
 TEST_F(BoardDisplayTests, DisplayDefaultBoard) {
     // Initialize default board
-    board.initialize("Player1", "Player2");
+    board.initialize();
     // Capture stdout
     ::testing::internal::CaptureStdout();
     board.display();
@@ -42,8 +42,8 @@ TEST_F(BoardDisplayTests, DisplayDefaultBoard) {
 TEST_F(BoardDisplayTests, DisplayCustomGrid) {
     // Create empty grid and place custom pieces
     std::vector<std::vector<Piece*>> customGrid(8, std::vector<Piece*>(8, nullptr));
-    customGrid[0][0] = new Piece("P1", {0, 0});
-    customGrid[7][7] = new Piece("P2", {7, 7});
+    customGrid[0][0] = new Piece(true, {0, 0});
+    customGrid[7][7] = new Piece(false, {7, 7});
     board.initialize(customGrid);
 
     ::testing::internal::CaptureStdout();

@@ -6,7 +6,7 @@ protected:
     Piece* piece;
 
     void SetUp() override {
-        piece = new Piece("Red", {0, 0}); // Initialize a red piece at position (0, 0)
+        piece = new Piece(true, {0, 0}); // Initialize a black piece at position (0, 0)
     }
 
     void TearDown() override {
@@ -26,5 +26,5 @@ TEST_F(PieceTests, SetPositionUpdatesPosition) {
 }
 
 TEST_F(PieceTests, GetColorReturnsCorrectColor) {
-    EXPECT_EQ(piece->getColor(), "Red");
+    EXPECT_TRUE(piece->isBlackPiece());
 }

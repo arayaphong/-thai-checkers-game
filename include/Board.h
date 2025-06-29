@@ -14,12 +14,12 @@ public:
     void setModel(GameModel* m);
     void initialize(const std::vector<std::vector<std::unique_ptr<Piece>>>& initialGrid);
     void initialize(const std::vector<std::vector<Piece*>>& initialGrid); // Overload for raw pointer grid
-    void initialize(std::string_view p1, std::string_view p2);
-    void setTurn(std::string_view color) noexcept;
+    void initialize();
+    void setTurn(bool isBlack) noexcept;
     void display() const;
     std::vector<Move> getValidMovesFor(const Position& pos) const;
     std::map<Position, std::vector<Move>> getAllValidMoves() const;
     void executeMove(const Move& move);
     std::vector<std::unique_ptr<Piece>> getMoveablePieces() const;
-    [[nodiscard]] std::string_view getCurrentPlayer() const;
+    [[nodiscard]] bool isBlacksTurn() const;
 };
