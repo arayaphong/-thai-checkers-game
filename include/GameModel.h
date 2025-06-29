@@ -8,6 +8,13 @@
 #include <array>
 #include <string_view>
 
+enum class GameResult {
+    ONGOING,
+    BLACK_WINS,
+    WHITE_WINS,
+    DRAW
+};
+
 class GameModel {
     inline static constexpr size_t BOARD_SIZE = 8;
     inline static constexpr size_t MAX_HISTORY_SIZE = 20; // Keep last 20 positions for draw detection
@@ -33,7 +40,7 @@ public:
     [[nodiscard]] std::map<Position, std::vector<Move>> getValidMovesForPlayer(bool isBlack) const;
     void executeMove(const Move& move);
     [[nodiscard]] bool isGameOver() const noexcept;
-    [[nodiscard]] std::string getWinner() const noexcept;
+    [[nodiscard]] GameResult getWinner() const noexcept;
     [[nodiscard]] int getPieceCount(bool isBlack) const noexcept;
     [[nodiscard]] std::unique_ptr<GameModel> clone() const;
 

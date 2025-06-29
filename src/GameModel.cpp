@@ -324,14 +324,14 @@ bool GameModel::isGameOver() const noexcept {
     return false;
 }
 
-std::string GameModel::getWinner() const noexcept {
-    if (!isGameOver()) return "";
+GameResult GameModel::getWinner() const noexcept {
+    if (!isGameOver()) return GameResult::ONGOING;
     // If a player has no pieces, the other wins
-    if (getPieceCount(true) == 0) return "White";
-    if (getPieceCount(false) == 0) return "Black";
+    if (getPieceCount(true) == 0) return GameResult::WHITE_WINS;
+    if (getPieceCount(false) == 0) return GameResult::BLACK_WINS;
 
     // Otherwise, winner is the opponent of the player who can't move
-    return isBlacksTurn ? "White" : "Black";
+    return isBlacksTurn ? GameResult::WHITE_WINS : GameResult::BLACK_WINS;
 }
 
 int GameModel::getPieceCount(bool isBlack) const noexcept {

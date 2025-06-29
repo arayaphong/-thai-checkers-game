@@ -2,6 +2,19 @@
 #include <sstream>
 #include <functional>
 #include <iomanip>
+#include <iostream>
+
+namespace {
+    std::string gameResultToString(GameResult result) {
+        switch (result) {
+            case GameResult::ONGOING: return "Game Ongoing";
+            case GameResult::BLACK_WINS: return "Black";
+            case GameResult::WHITE_WINS: return "White";
+            case GameResult::DRAW: return "Draw";
+            default: return "Unknown";
+        }
+    }
+}
 
 void GameSimulator::run() {
     initializeGame();
@@ -19,7 +32,7 @@ void GameSimulator::simulateRecursive(std::unique_ptr<GameModel> model) {
         ++scenarioCount;
 
         std::cout << "Scenario " << scenarioCount << std::endl;
-        std::cout << " Winner: " << model->getWinner() << std::endl;
+        std::cout << " Winner: " << gameResultToString(model->getWinner()) << std::endl;
         printBoardGrid(model->getBoard());
         std::cout << " -----------------\n\n";
 
